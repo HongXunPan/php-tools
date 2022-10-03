@@ -26,7 +26,12 @@ for ($i = 1; $i <= $count; $i++) {
 控制台输出:
 
 ```bash
-[root@7ee7e1d16bd9 php-tools]# 
+[root@7ee7e1d16bd9 php-tools]# php test1.php 
+[##############                                                                                      ] [132/1000] [13.20%]
+
+[root@7ee7e1d16bd9 php-tools]# php test1.php 
+[################################################################################                    ] [798/1000] [79.80%]
+ 
 [root@7ee7e1d16bd9 php-tools]# php test1.php 
 [####################################################################################################] [1000/1000] [100.00%]
 
@@ -68,7 +73,33 @@ fclose($fp);
 
 ```bash
 [root@7ee7e1d16bd9 php-tools]# php testDownload.php 
-Downloading https://dldir1.qq.com/foxmail/wecom-mac/update/WeCom_4.0.16.90619.dmg to /data/wwwroot/HongXunPan/php-tools/storage/20221003211215-683f1d35c05b8fc09da2b3a90fe6458aWeCom_4.0.16.90619.dmg 
-[####################################################################################################] [453173.457/453173.457kb] [100.00%]
+Downloading https://dldir1.qq.com/foxmail/wecom-mac/update/WeCom_4.0.16.90619.dmg to /data/wwwroot/HongXunPan/php-tools/storage/20221003214607-2bc3ce47cd566fe80ff4daf35af9f1e6WeCom_4.0.16.90619.dmg 
+[#########                                                                                           ] [38.016/442.552M] [8.59%]
+
+[root@7ee7e1d16bd9 php-tools]# php testDownload.php 
+Downloading https://dldir1.qq.com/foxmail/wecom-mac/update/WeCom_4.0.16.90619.dmg to /data/wwwroot/HongXunPan/php-tools/storage/20221003214607-2bc3ce47cd566fe80ff4daf35af9f1e6WeCom_4.0.16.90619.dmg 
+[#######################                                                                             ] [98.520/442.552M] [22.26%]
+
+[root@7ee7e1d16bd9 php-tools]# php testDownload.php 
+Downloading https://dldir1.qq.com/foxmail/wecom-mac/update/WeCom_4.0.16.90619.dmg to /data/wwwroot/HongXunPan/php-tools/storage/20221003214607-2bc3ce47cd566fe80ff4daf35af9f1e6WeCom_4.0.16.90619.dmg 
+[##################################                                                                  ] [147.063/442.552M] [33.23%
+
+[root@7ee7e1d16bd9 php-tools]# php testDownload.php 
+Downloading https://dldir1.qq.com/foxmail/wecom-mac/update/WeCom_4.0.16.90619.dmg to /data/wwwroot/HongXunPan/php-tools/storage/20221003214607-2bc3ce47cd566fe80ff4daf35af9f1e6WeCom_4.0.16.90619.dmg 
+[#####################################################                                               ] [231.079/442.552M] [52.22%
+
+[root@7ee7e1d16bd9 php-tools]# php testDownload.php 
+Downloading https://dldir1.qq.com/foxmail/wecom-mac/update/WeCom_4.0.16.90619.dmg to /data/wwwroot/HongXunPan/php-tools/storage/20221003214607-2bc3ce47cd566fe80ff4daf35af9f1e6WeCom_4.0.16.90619.dmg 
+[############################################################################                        ] [333.242/442.552M] [75.30%
+
+[root@7ee7e1d16bd9 php-tools]# php testDownload.php 
+Downloading https://dldir1.qq.com/foxmail/wecom-mac/update/WeCom_4.0.16.90619.dmg to /data/wwwroot/HongXunPan/php-tools/storage/20221003214607-2bc3ce47cd566fe80ff4daf35af9f1e6WeCom_4.0.16.90619.dmg 
+[##############################################################################################      ] [415.409/442.552M] [93.87%
+
+[root@7ee7e1d16bd9 php-tools]# php testDownload.php 
+Downloading https://dldir1.qq.com/foxmail/wecom-mac/update/WeCom_4.0.16.90619.dmg to /data/wwwroot/HongXunPan/php-tools/storage/20221003214607-2bc3ce47cd566fe80ff4daf35af9f1e6WeCom_4.0.16.90619.dmg 
+[####################################################################################################] [442.552/442.552M] [100.00%]
+
+[root@7ee7e1d16bd9 php-tools]# 
 
 ```
