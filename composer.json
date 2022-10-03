@@ -1,0 +1,20 @@
+{
+    "name": "hongxunpan/php-tools",
+    "description": "common php tools and functions",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "HongXunPan\\Tools\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "HongXunPan",
+            "email": "me@kangxuanpeng.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6"
+    }
+}
