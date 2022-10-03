@@ -63,3 +63,12 @@ curl_close($ch);
 fclose($fp);
 \HongXunPan\Tools\Cli\Progress::endCliProgress();
 ```
+
+控制台输出
+
+```bash
+[root@7ee7e1d16bd9 php-tools]# php testDownload.php 
+Downloading https://dldir1.qq.com/foxmail/wecom-mac/update/WeCom_4.0.16.90619.dmg to /data/wwwroot/HongXunPan/php-tools/storage/20221003211215-683f1d35c05b8fc09da2b3a90fe6458aWeCom_4.0.16.90619.dmg 
+[####################################################################################################] [453173.457/453173.457kb] [100.00%]
+
+```
