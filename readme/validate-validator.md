@@ -59,3 +59,9 @@ Stack trace:
 #0 /data/wwwroot/HongXunPan/php-tools/testValidate.php(16): HongXunPan\Tools\Validate\Validator::validateAndThrow()
 
 ```
+
+### 贡献者 
+
+更多规则待完善,欢迎提交PR
+
+- [HongXunPan](https://github.com/HongXunPan/)
