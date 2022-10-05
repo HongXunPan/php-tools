@@ -7,7 +7,7 @@ use HongXunPan\Tools\Db\Redis\Redis;
 class RedisLock
 {
     //一定时间内最大请求次数 超过则列为刷子
-    private $maxTimes = 5;
+    private $maxTimes;
 
     private $userId;
     private $lockName;

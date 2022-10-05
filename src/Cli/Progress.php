@@ -71,7 +71,6 @@ class Progress
     }
 
     /** @deprecated some bug in docker or MacOs
-     * @noinspection DuplicatedCode
      */
     public static function echoCliProgressOld($current, $total, $showDetail = true, $showPercent = true)
     {
@@ -184,7 +183,7 @@ class Progress
         });
 
         echo "Downloading \033[1;31m" . $url . "\033[0m to \033[1;32m$saveFile\033[0m \n";
-        $response = curl_exec($ch);
+        curl_exec($ch);
         curl_close($ch);
         fclose($fp);
         self::endCliProgress();
