@@ -46,7 +46,7 @@ $rules = [
     'test' => 'required|in:[2,3]',
 ];
 
-$result = \HongXunPan\Tools\Validate\Validator::validateAndThrow($array, $rules, true); //可选参数 true只抛出第一个错误，默认抛出全部错误
+$result = \HongXunPan\Tools\Validate\Validator::validateOrThrow($array, $rules, true); //可选参数 true只抛出第一个错误，默认抛出全部错误
 ```
 
 结果 result
@@ -56,7 +56,7 @@ $result = \HongXunPan\Tools\Validate\Validator::validateAndThrow($array, $rules,
 错误则直接抛出异常
 PHP Fatal error:  Uncaught Exception: "test must in [2,3]" in /data/wwwroot/HongXunPan/php-tools/src/Validate/Validator.php:52
 Stack trace:
-#0 /data/wwwroot/HongXunPan/php-tools/testValidate.php(16): HongXunPan\Tools\Validate\Validator::validateAndThrow()
+#0 /data/wwwroot/HongXunPan/php-tools/testValidate.php(16): HongXunPan\Tools\Validate\Validator::validateOrThrow()
 
 ```
 

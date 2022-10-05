@@ -39,7 +39,7 @@ class Validator
      * @return bool
      * @throws Exception
      */
-    public static function validateAndThrow(array $data, array $rules, $throwFirst = false)
+    public static function validateOrThrow(array $data, array $rules, $throwFirst = false)
     {
         $result = self::validate($data, $rules);
         if ($result['count'] === 0) {
