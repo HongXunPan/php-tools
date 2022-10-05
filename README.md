@@ -9,6 +9,6 @@ install `composer require hongxunpan/php-tools`
 
 ## update-log
 
-- 1.1.0 2022-10-04 add validator
-- 1.0.1 2022-10-03 add readme doc
-- 1.0.0 2022-10-03 cli/progress
+- `1.1.0` 2022-10-04 add validator
+- `1.0.1` 2022-10-03 add readme doc
+- `1.0.0` 2022-10-03 cli/progress
