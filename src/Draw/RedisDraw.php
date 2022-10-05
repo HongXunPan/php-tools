@@ -9,6 +9,7 @@ class RedisDraw
 {
     /** @var \Redis */
     private $redis;
+    private $poolName;
     private $redisKey;
 
     public function __construct($poolName = 'default', $redis = null)
@@ -17,6 +18,7 @@ class RedisDraw
             $redis = Redis::connection();
         }
         $this->redis = $redis;
+        $this->poolName = $poolName;
         $this->redisKey = 'draw:' . $poolName;
     }
 
@@ -27,7 +29,7 @@ class RedisDraw
 
     public function removeUserFromPool(array $userIds)
     {
-        $this->redis->sRem($this->redisKey, $userIds);
+        $this->redis->sRem($this->redisKey, ...$userIds);
     }
 
     public function getPoolUserCount()
@@ -43,7 +45,7 @@ class RedisDraw
     /**
      * @param int $count
      * @param bool $canDuplicate
-     * @return array|bool|mixed|string
+     * @return array
      * @author HongXunPan <me@kangxuanpeng.com>
      * @date 2022-10-05 21:45
      */
@@ -55,7 +57,7 @@ class RedisDraw
         //先判断个数
 //        $total = $this->redis->sCard($this->redisKey);
         if ($this->getPoolUserCount() < $count) {
-            throw new Exception('pool member is not enough');
+            throw new Exception("pool: $this->poolName member is not enough");
         }
 
         if ($canDuplicate) {
@@ -81,4 +83,43 @@ class RedisDraw
         $this->redis->expireAt($this->redisKey, $timestamp);
     }
 
+    /**
+     * 一定要保证奖池大于抽奖数
+     * 复杂点的 带有优先级的抽奖属性 //一个优先级比较高的池子，另一个是普通的
+     * @param string $highPoolName 高级奖池名字，需提前添加好成员
+     * @param int $highCount 有几个高级中奖名额
+     * @param string $normalPoolName 普通奖池名额，也需要提前添加成员
+     * @param bool $canDuplicate 中了高级之后是否还能中普通的
+     * @param null $redis
+     * @return array
+     * @throws Exception
+     * @author HongXunPan <me@kangxuanpeng.com>
+     * @date 2022-10-06 00:20
+     */
+    public static function drawByWeight($highPoolName, $highCount, $normalPoolName, $canDuplicate = false, $redis = null)
+    {
+        $highPool = new self($highPoolName, $redis);
+        $normalPool = new self($normalPoolName, $redis);
+
+        $highPoolTotal = $highPool->getPoolUserCount();
+        if ($highPoolTotal < $highCount) {
+//            $highUser = $highPool->draw($highPoolTotal, $canDuplicate);
+            $highUser = $highPool->getPoolUsers();//优先奖池全中了
+            //优先的奖池都比要抽的数量少 则需要去普通奖池借几个人
+            $borrowUserCount = $highCount - $highPoolTotal;
+            $normalPool->removeUserFromPool($highUser);//去重防止高级池子重复
+
+            $borrowUser = $normalPool->draw($borrowUserCount, $canDuplicate);
+            if ($canDuplicate) {
+                $highPool->freePool();
+            }
+            $drawHighUser = array_merge($highUser, $borrowUser);
+        } else {
+            $drawHighUser = $highPool->draw($highCount, $canDuplicate);
+            if (!$canDuplicate) {
+                $normalPool->removeUserFromPool($drawHighUser); //中了高等级的奖就不能再中普通的奖了，从普通奖池拿掉
+            }
+        }
+        return $drawHighUser;
+    }
 }
