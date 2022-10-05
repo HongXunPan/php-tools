@@ -6,6 +6,8 @@ install `composer require hongxunpan/php-tools`
 
 - [cli/Progress](readme/cli-progress.md) cli 终端下的任务进度显示
 - [validate/Validator](readme/validate-validator.md) 验证器
+- [db/Redis/Redis](readme/db-redis.md) Redis 连接
+- [lock/RedisLock](readme/redis-lock) redis 分布独占锁
 
 ## update-log
 

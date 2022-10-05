@@ -21,6 +21,8 @@ class Redis
 
     /**
      * @return Redis
+     * @author HongXunPan <me@kangxuanpeng.com>
+     * @date 2022-10-05 16:17
      */
     private static function getInstance()
     {
@@ -42,6 +44,8 @@ class Redis
      * @param string $connectName default: default
      * @param array $options
      * @see $redis->setOption()
+     * @author HongXunPan <me@kangxuanpeng.com>
+     * @date 2022-10-05 16:18
      */
     public static function setConfig(array $config = [], $connectName = 'default', array $options = [])
     {
