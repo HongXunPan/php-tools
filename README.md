@@ -14,6 +14,7 @@
 
 ### update-log
 
+- `1.3.1` 2022-10-06 fix high draw bugs
 - `1.3.0` 2022-10-06 add redis-draw
 - `1.2.0` 2022-10-05 add redis && redis-lock
 - `1.1.0` 2022-10-04 add validator
