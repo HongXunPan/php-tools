@@ -110,7 +110,7 @@ class RedisDraw
             $normalPool->removeUserFromPool($highUser);//去重防止高级池子重复
 
             $borrowUser = $normalPool->draw($borrowUserCount, $canDuplicate);
-            if ($canDuplicate) {
+            if (!$canDuplicate) {
                 $highPool->freePool();
             }
             $drawHighUser = array_merge($highUser, $borrowUser);

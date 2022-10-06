@@ -1,8 +1,10 @@
 ## php 工具包
 
-install `composer require hongxunpan/php-tools`
+### install 
 
-## usage
+`composer require hongxunpan/php-tools`
+
+### usage
 
 - [cli/Progress](readme/cli-progress.md) cli 终端下的任务进度显示
 - [validate/Validator](readme/validate-validator.md) 验证器
@@ -10,7 +12,7 @@ install `composer require hongxunpan/php-tools`
 - [lock/RedisLock](readme/redis-lock.md) redis 分布独占锁
 - [draw/RedisDraw](readme/redis-draw.md) redis 抽奖
 
-## update-log
+### update-log
 
 - `1.3.0` 2022-10-06 add redis-draw
 - `1.2.0` 2022-10-05 add redis && redis-lock
