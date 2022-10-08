@@ -32,6 +32,18 @@ class RedisDraw
         $this->redis->sRem($this->redisKey, ...$userIds);
     }
 
+    /**
+     * 用户是否在奖池内
+     * @param $userId
+     * @return bool
+     * @author HongXunPan <me@kangxuanpeng.com>
+     * @date 2022-10-08 17:59
+     */
+    public function isUserInPool($userId)
+    {
+        return $this->redis->sIsMember($this->redisKey, $userId);
+    }
+
     public function getPoolUserCount()
     {
         return $this->redis->sCard($this->redisKey);
