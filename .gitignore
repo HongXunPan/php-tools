@@ -2,3 +2,4 @@
 test*
 /storage/
 *.idea
+*.vscode
