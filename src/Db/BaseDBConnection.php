@@ -4,11 +4,13 @@ namespace HongXunPan\Tools\Db;
 
 abstract class BaseDBConnection
 {
-    private $connection;
+    protected $connection;
+    protected $connectName;
 
-    public function __construct($connection)
+    public function __construct($connection, $connectName = 'default')
     {
         $this->connection = $connection;
+        $this->connectName = $connectName;
         return $this;
     }
 
