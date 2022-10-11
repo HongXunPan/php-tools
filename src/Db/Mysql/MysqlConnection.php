@@ -4,7 +4,7 @@ namespace HongXunPan\Tools\Db\Mysql;
 
 use HongXunPan\Tools\Db\BaseDBConnection;
 
-class MysqlConnectionBase extends BaseDBConnection
+class MysqlConnection extends BaseDBConnection
 {
     protected function recordLog($name, $arguments)
     {

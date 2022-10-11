@@ -54,6 +54,6 @@ class Mysql extends BaseDB
 
     public static function connection($connectName = 'default')
     {
-        return new MysqlConnectionBase(self::getConnection($connectName));
+        return new MysqlConnection(self::getConnection($connectName));
     }
 }
