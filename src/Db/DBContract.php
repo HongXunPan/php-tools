@@ -4,7 +4,7 @@ namespace HongXunPan\Tools\Db;
 
 use Exception;
 
-abstract class BaseDB implements DBInterface
+abstract class DBContract implements DBInterface
 {
     protected static $instance;
 
@@ -20,7 +20,7 @@ abstract class BaseDB implements DBInterface
     }
 
     /**
-     * @return BaseDB
+     * @return DBContract
      * @author HongXunPan <me@kangxuanpeng.com>
      * @date 2022-10-11 15:30
      */

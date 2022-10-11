@@ -2,10 +2,10 @@
 
 namespace HongXunPan\Tools\Db\Mysql;
 
-use HongXunPan\Tools\Db\BaseDBConnection;
+use HongXunPan\Tools\Db\DBConnectionContract;
 use PDO;
 
-class MysqlConnection extends BaseDBConnection
+class MysqlConnection extends DBConnectionContract
 {
     /**
      * @param $connection

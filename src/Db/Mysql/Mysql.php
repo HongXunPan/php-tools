@@ -3,10 +3,10 @@
 namespace HongXunPan\Tools\Db\Mysql;
 
 use Exception;
-use HongXunPan\Tools\Db\BaseDB;
+use HongXunPan\Tools\Db\DBContract;
 use PDO;
 
-class Mysql extends BaseDB
+class Mysql extends DBContract
 {
     public static function setConfig(array $config = [], $connectName = 'default', array $options = [])
     {

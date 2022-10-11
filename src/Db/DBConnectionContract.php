@@ -2,7 +2,7 @@
 
 namespace HongXunPan\Tools\Db;
 
-abstract class BaseDBConnection
+abstract class DBConnectionContract
 {
     protected $connection;
     protected $connectName;
