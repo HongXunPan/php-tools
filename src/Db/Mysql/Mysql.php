@@ -8,7 +8,6 @@ use PDO;
 
 class Mysql extends BaseDB
 {
-
     public static function setConfig(array $config = [], $connectName = 'default', array $options = [])
     {
         $default = [
@@ -54,6 +53,6 @@ class Mysql extends BaseDB
 
     public static function connection($connectName = 'default')
     {
-        return new MysqlConnection(self::getConnection($connectName));
+        return new MysqlConnection(self::getConnection($connectName), $connectName);
     }
 }

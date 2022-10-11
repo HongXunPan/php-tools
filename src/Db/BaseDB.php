@@ -69,5 +69,4 @@ abstract class BaseDB implements DBInterface
         $instance->connection[$connectName] = $connection;
         return $connection;
     }
-
 }

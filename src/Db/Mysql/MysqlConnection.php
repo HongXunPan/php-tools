@@ -22,6 +22,7 @@ class MysqlConnection extends BaseDBConnection
      * @deprecated
      * @author HongXunPan <me@kangxuanpeng.com>
      * @date 2022-10-11 17:05
+     * @noinspection PhpDeprecationInspection
      */
     public function getConnection()
     {

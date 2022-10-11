@@ -108,8 +108,13 @@ class RedisDraw
      * @author HongXunPan <me@kangxuanpeng.com>
      * @date 2022-10-06 00:20
      */
-    public static function drawByWeight($highPoolName, $highCount, $normalPoolName, $canDuplicate = false, $redis = null)
-    {
+    public static function drawByWeight(
+        $highPoolName,
+        $highCount,
+        $normalPoolName,
+        $canDuplicate = false,
+        $redis = null
+    ) {
         $highPool = new self($highPoolName, $redis);
         $normalPool = new self($normalPoolName, $redis);
 

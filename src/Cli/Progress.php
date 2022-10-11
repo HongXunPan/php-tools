@@ -67,7 +67,6 @@ class Progress
         }
         echo "\033[?25l";//隐藏光标
         echo $process . "\r";
-
     }
 
     /** @deprecated some bug in docker or MacOs
@@ -139,8 +138,14 @@ class Progress
         return number_format($bytes / pow(1024, $p), 3, '.', '');
     }
 
-    public static function downloadProgress($ch, $countDownloadSize, $currentDownloadSize, $countUploadSize, $currentUploadSize, $unit = '')
-    {
+    public static function downloadProgress(
+        $ch,
+        $countDownloadSize,
+        $currentDownloadSize,
+        $countUploadSize,
+        $currentUploadSize,
+        $unit = ''
+    ) {
         $countDownloadSize = self::getFilesize($countDownloadSize, $unit);
         $currentDownloadSize = self::getFilesize($currentDownloadSize, $unit);
         if ($countDownloadSize == -1 || $currentDownloadSize == -1) {
@@ -178,9 +183,13 @@ class Progress
         curl_setopt($ch, CURLOPT_NOPROGRESS, !$isShowProgress);
         curl_setopt($ch, CURLOPT_FILE, $fp);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function ($resource, $downloadSize, $downloaded, $uploadSize, $uploaded) use ($unit) {
-            self::downloadProgress($resource, $downloadSize, $downloaded, $uploadSize, $uploaded, $unit);
-        });
+        curl_setopt(
+            $ch,
+            CURLOPT_PROGRESSFUNCTION,
+            function ($resource, $downloadSize, $downloaded, $uploadSize, $uploaded) use ($unit) {
+                self::downloadProgress($resource, $downloadSize, $downloaded, $uploadSize, $uploaded, $unit);
+            }
+        );
 
         echo "Downloading \033[1;31m" . $url . "\033[0m to \033[1;32m$saveFile\033[0m \n";
         curl_exec($ch);
