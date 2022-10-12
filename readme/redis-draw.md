@@ -7,7 +7,7 @@
 常规抽奖
 
 ```php
-\HongXunPan\Tools\Db\Redis\Redis::setConfig($config);
+\HongXunPan\DB\Redis\Redis::setConfig($config);
 
 $draw = (new \HongXunPan\Tools\Draw\RedisDraw($drawKey));
 $arr = [1,2,3,4,5,6,7,8,9,10];

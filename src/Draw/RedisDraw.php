@@ -3,7 +3,7 @@
 namespace HongXunPan\Tools\Draw;
 
 use Exception;
-use HongXunPan\Tools\Db\Redis\Redis;
+use HongXunPan\DB\Redis\Redis;
 
 class RedisDraw
 {

@@ -3,8 +3,8 @@
 ### 使用方法
 
 ```php
-\HongXunPan\Tools\Db\Redis\Redis::setConfig($redisConfig);
-$redis = \HongXunPan\Tools\Db\Redis\Redis::connection();
+\HongXunPan\DB\Redis\Redis::setConfig($redisConfig);
+$redis = \HongXunPan\DB\Redis\Redis::connection();
 $lock = new \HongXunPan\Tools\Lock\RedisLock($userId, $lockName, $redis);
 $res = $lock->addUserLock(100);//超时时间
 if ($res === 1) {

@@ -2,7 +2,7 @@
 
 namespace HongXunPan\Tools\Lock;
 
-use HongXunPan\Tools\Db\Redis\Redis;
+use HongXunPan\DB\Redis\Redis;
 
 class RedisLock
 {
