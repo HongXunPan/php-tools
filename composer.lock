@@ -4,8 +4,49 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6560294ebc71dd215682aa27250366b8",
-    "packages": [],
+    "content-hash": "96494ef30ae2624b1226980a033095fc",
+    "packages": [
+        {
+            "name": "hongxunpan/db",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/HongXunPan/db-connection.git",
+                "reference": "5d922b86ad24b4d5d34f979eb0d2aabe6b1d8387"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/HongXunPan/db-connection/zipball/5d922b86ad24b4d5d34f979eb0d2aabe6b1d8387",
+                "reference": "5d922b86ad24b4d5d34f979eb0d2aabe6b1d8387",
+                "shasum": ""
+            },
+            "require-dev": {
+                "symfony/var-dumper": "^6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "HongXunPan\\DB\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "HongXunPan",
+                    "email": "me@kangxuanpeng.com"
+                }
+            ],
+            "description": "connections for db, such as mysql & redis ...",
+            "support": {
+                "issues": "https://github.com/HongXunPan/db-connection/issues",
+                "source": "https://github.com/HongXunPan/db-connection/tree/1.0.1"
+            },
+            "time": "2022-10-12T17:30:12+00:00"
+        }
+    ],
     "packages-dev": [
         {
             "name": "symfony/polyfill-mbstring",
