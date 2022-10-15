@@ -14,6 +14,7 @@
 
 ### update-log
 
+ - `2.1.0` 2022-10-16 add redis-time-limit-offers  
  - `2.0.0` 2022-10-13 separate out the db-connection  
  - `1.4.0` 2022-10-11 add mysql pdo connect & abstract db connect
  - `1.3.2` 2022-10-08 add function isUserInPool
