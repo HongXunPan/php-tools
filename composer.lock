@@ -4,21 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "96494ef30ae2624b1226980a033095fc",
+    "content-hash": "495f599a2445a79d55d7f9205496731f",
     "packages": [
         {
             "name": "hongxunpan/db",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/HongXunPan/db-connection.git",
-                "reference": "5d922b86ad24b4d5d34f979eb0d2aabe6b1d8387"
+                "reference": "1c05ba489caa3de25989144612b240fe4ed098f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/HongXunPan/db-connection/zipball/5d922b86ad24b4d5d34f979eb0d2aabe6b1d8387",
-                "reference": "5d922b86ad24b4d5d34f979eb0d2aabe6b1d8387",
+                "url": "https://api.github.com/repos/HongXunPan/db-connection/zipball/1c05ba489caa3de25989144612b240fe4ed098f9",
+                "reference": "1c05ba489caa3de25989144612b240fe4ed098f9",
                 "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6"
             },
             "require-dev": {
                 "symfony/var-dumper": "^6.0"
@@ -42,9 +45,9 @@
             "description": "connections for db, such as mysql & redis ...",
             "support": {
                 "issues": "https://github.com/HongXunPan/db-connection/issues",
-                "source": "https://github.com/HongXunPan/db-connection/tree/1.0.1"
+                "source": "https://github.com/HongXunPan/db-connection/tree/1.0.2"
             },
-            "time": "2022-10-12T17:30:12+00:00"
+            "time": "2022-10-15T07:30:49+00:00"
         }
     ],
     "packages-dev": [
