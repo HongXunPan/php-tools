@@ -29,12 +29,20 @@ class RedisTimeLimitOffers
         $this->redis = $redis;
     }
 
+    /**
+     * 检查用户是否有名额参与秒杀
+     * @return bool
+     * @throws TimeLimitOffersException
+     * @author HongXunPan <me@kangxuanpeng.com>
+     * @date 2022-10-15 14:58
+     */
     public function isHaveChance()
     {
         if ($this->redis->hExists($this->redisKeyUsers, $this->userId)) {
+            //已经抢到过名额,在用户池里
             return true;
         }
-        $count = $this->redis->get($this->redisKeyCount);
+        $count = $this->redis->get($this->redisKeyCount);//用户总数
         if ($count === false) {
             $count = 0;
         }
@@ -68,10 +76,21 @@ class RedisTimeLimitOffers
             );
 //            return false;
         }
+        //将用户添加到用户池
         $this->redis->hSet($this->redisKeyUsers, $this->userId, date('Ymd H:i:s'));
 
-        $this->redis->expire($this->redisKeyCount, 60 * 60 * 12);
-        $this->redis->expire($this->redisKeyUsers, 60 * 60 * 12);
         return true;
+    }
+
+    public function expire($ttl = 30 * 60)
+    {
+        $this->redis->expire($this->redisKeyCount, $ttl);
+        $this->redis->expire($this->redisKeyUsers, $ttl);
+    }
+
+    public function expireAt($timestamp)
+    {
+        $this->redis->expireAt($this->redisKeyCount, $timestamp);
+        $this->redis->expireAt($this->redisKeyUsers, $timestamp);
     }
 }
