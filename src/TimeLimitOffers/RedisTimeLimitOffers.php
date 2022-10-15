@@ -93,4 +93,23 @@ class RedisTimeLimitOffers
         $this->redis->expireAt($this->redisKeyCount, $timestamp);
         $this->redis->expireAt($this->redisKeyUsers, $timestamp);
     }
+
+    public function getChanceLeft()
+    {
+        $count = $this->redis->get($this->redisKeyCount);//用户总数
+        if ($count === false) {
+            $count = 0;
+        }
+        $left = $this->limits - $count;
+        if ($left < 0) {
+            $left = 0;
+        }
+        return $left;
+    }
+
+    public function getHadChanceUsers()
+    {
+        $users = $this->redis->hGetAll($this->redisKeyUsers);
+        return array_keys($users);
+    }
 }

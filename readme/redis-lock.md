@@ -1,5 +1,7 @@
 ## redis-lock (\HongXunPan\Tools\Lock\RedisLock)
 
+redis 独占锁
+
 ### 使用方法
 
 ```php
