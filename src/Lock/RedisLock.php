@@ -3,6 +3,7 @@
 namespace HongXunPan\Tools\Lock;
 
 use HongXunPan\DB\Redis\Redis;
+use HongXunPan\Tools\Validate\Validator;
 
 class RedisLock
 {
@@ -28,6 +29,34 @@ class RedisLock
         }
     }
 
+    public static function transaction(array $lockConfig, callable $function)
+    {
+        $default = [
+//            'userId' => ,
+            'lockName' => null,
+            'redis' => null,
+            'time' => 10,
+        ];
+        $lockConfig = array_merge($default, $lockConfig);
+        Validator::validateOrThrow($lockConfig, ['userId' => 'required']);
+
+        $lock = new RedisLock(
+            $lockConfig['userId'],
+            $lockConfig['lockName'] ?: null,
+            $lockConfig['redis'] ?: null
+        );
+
+        $res = $lock->addUserLock(100);//超时时间
+        if ($res === 1) {
+            //do your thing
+            $result = call_user_func($function);
+            $lock->clearUserLock(); //用完释放
+            return $result;
+        } else {
+            throw new LockException("Lock Fail: $lock->userId -> $lock->lockName");
+        }
+    }
+
     /**
      * 添加用户独占锁
      * @param int $time
@@ -47,19 +76,19 @@ class RedisLock
     }
 
     /**
-     * @param int $time
+     * 一定时间内频繁请求的用户
+     * 超过设定次数则特别标记重点观察
      * @return int
-     * @throws LockException
-     * @author HongXunPan <me@kangxuanpeng.com>
-     * @date 2022-10-05 16:27
      */
-    public function addUserLockOrThrow($time = 10)
+    private function incrLockTimes()
     {
-        $result = $this->addUserLock($time);
-        if ($result !== 1) {
-            throw new LockException("Lock Fail: $this->userId -> $this->lockName");
+        $times = $this->redis->incr($this->redisKey);
+        /** @noinspection PhpStatementHasEmptyBodyInspection */
+        if ($times >= $this->maxTimes) {
+            //一定时间内发多个请求 超过最大限制
+            //do some log
         }
-        return $result;
+        return $times;
     }
 
     /**
@@ -75,18 +104,18 @@ class RedisLock
     }
 
     /**
-     * 一定时间内频繁请求的用户
-     * 超过设定次数则特别标记重点观察
+     * @param int $time
      * @return int
+     * @throws LockException
+     * @author HongXunPan <me@kangxuanpeng.com>
+     * @date 2022-10-05 16:27
      */
-    private function incrLockTimes()
+    public function addUserLockOrThrow($time = 10)
     {
-        $times = $this->redis->incr($this->redisKey);
-        /** @noinspection PhpStatementHasEmptyBodyInspection */
-        if ($times >= $this->maxTimes) {
-            //一定时间内发多个请求 超过最大限制
-            //do some log
+        $result = $this->addUserLock($time);
+        if ($result !== 1) {
+            throw new LockException("Lock Fail: $this->userId -> $this->lockName");
         }
-        return $times;
+        return $result;
     }
 }
