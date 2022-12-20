@@ -18,4 +18,12 @@ if ($res === 1) {
 
 //or
 $lock->addUserLockOrThrow(100);//没有取得锁会直接抛出异常
+
+//or
+$lockConfig = ['userId' => $userId, 'lockName' => $lockName, 'redis' => $redis, 'time' => 10];
+\HongXunPan\Tools\Lock\RedisLock::transaction($lockConfig, function () use ($lockConfig) {
+    //is callable
+    return 1;
+});
+
 ```
