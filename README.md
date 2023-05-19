@@ -12,9 +12,11 @@
 - [draw/RedisDraw](readme/redis-draw.md) redis 抽奖
 - [timeLimitOffers/RedisTimeLimitOffers](readme/redis-time-limit-offers.md) redis 抢购名额
 - [notice/DingTalk] 钉钉消息推送
+- [file/GetDirFiles](readme/get-dir-files.md) 扫描文件夹下的文件
 
 ### update-log
 
+ - `2.3.0` 2023-05-19 add get-dir-files
  - `2.2.0` 2023-02-20 add ServerMonitor & notice Interface
  - `2.1.1` 2022-12-20 redis-lock transaction callable  
  - `2.1.0` 2022-10-16 add redis-time-limit-offers  
