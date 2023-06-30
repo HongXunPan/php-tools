@@ -23,6 +23,13 @@
         "symfony/var-dumper": "^6.0"
     },
     "scripts": {
-        "test": "php -v"
+        "test": "@php -v",
+        "hxpSetConfigPath": "@php scripts/config/setConfigPath.php ",
+        "hxpGetConfigInitCode": "@php scripts/config/getConfigInitCode.php",
+        "hxpSetEnvPath": "@php scripts/env/setConfigPath.php ",
+        "hxpGetEnvInitCode": "@php scripts/env/getConfigInitCode.php"
+    },
+    "scripte-descriptions": {
+        "hxpSetConfigPath": "set Config-config, param is configPath,cachePath,canCache "
     }
 }
