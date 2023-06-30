@@ -1,6 +1,6 @@
 <?php
 
-require dirname(dirname(__DIR__)) . '/vendor/autoload.php';
+require dirname(__DIR__) . '/check.php';
 
 $config = \HongXunPan\Tools\Config\Config::cliConfig();
 $canCache = json_encode((bool)$config['canCache']);

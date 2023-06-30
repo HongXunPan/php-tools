@@ -1,6 +1,6 @@
 <?php
 
-require dirname(dirname(__DIR__)) . '/vendor/autoload.php';
+require dirname(__DIR__) . '/check.php';
 
 echo "please add this code to your helper or init file:
 \e[32m \e[1m
