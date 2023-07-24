@@ -30,6 +30,7 @@
         "hxpGetEnvInitCode": "@php scripts/env/getConfigInitCode.php"
     },
     "scripte-descriptions": {
+        "test": "composer run-script --working-dir=vendor/hongxunpan/php-tools hxpGetEnvInitCode",
         "hxpSetConfigPath": "set Config-config, param is configPath,cachePath,canCache "
     }
 }

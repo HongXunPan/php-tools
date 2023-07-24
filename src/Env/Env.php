@@ -19,6 +19,12 @@ class Env extends SetPath
             if ($pathConfig['envPath']) {
                 self::$configPath = $pathConfig['envPath'];
             }
+        } else {
+            if (PHP_VERSION >= '7.0') {
+                self::$configPath = dirname(__DIR__, 5);
+            } else {
+                self::$configPath = dirname(dirname(dirname(dirname(dirname(__DIR__)))));
+            }
         }
     }
 
