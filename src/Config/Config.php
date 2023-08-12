@@ -59,12 +59,19 @@ class Config extends SetPath
         }
     }
 
-    public function getConfig($key = '')
+    public function setConfigPath($configPath, $cachePath, $canCache)
+    {
+        self::$configPath = $configPath;
+        self::$cachePath = $cachePath;
+        self::loadConfig((bool)$canCache);
+    }
+
+    public function getConfig($key = '', $default = '')
     {
         if (self::$config === false) {
             $this->initConfig();
             self::loadConfig();
-            return $this->getConfig($key);
+            return $this->getConfig($key, $default);
         }
         if (empty($key)) {
             return self::$config;
@@ -73,7 +80,7 @@ class Config extends SetPath
         $config = self::$config;
         foreach ($keyArr as $configName) {
 //            $config = $config[$configName] ?? '';
-            $config = isset($config[$configName]) ? $config[$configName] : '';
+            $config = isset($config[$configName]) ? $config[$configName] : $default;
         }
         return $config;
     }
