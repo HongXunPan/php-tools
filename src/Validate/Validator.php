@@ -1,6 +1,6 @@
 <?php
 
-/** @noinspection PhpUnusedprotectedMethodInspection */
+/** @noinspection PhpUnused protectedMethodInspection */
 
 /**
  * 仿制laravel的验证器
@@ -41,7 +41,7 @@ class Validator
      */
     public static function validateOrThrow(array $data, array $rules, $throwFirst = false)
     {
-        $result = self::validate($data, $rules);
+        $result = static::validate($data, $rules);
         if ($result['count'] === 0) {
             return true;
         }
@@ -59,11 +59,14 @@ class Validator
      */
     public static function validate(array $data, array $options)
     {
-        $static = new self();
+        $static = new static();
         $errorCount = 0;
         $message = [];
+        $detail = [];
         if (!empty($options)) {
             foreach ($options as $param => $rules) {
+                @list($param, $paramName) = explode(':', $param);
+                $paramName = isset($paramName) ? $paramName : $param;
                 if (!isset($data[$param])) {
                     $errorCount++;
                     $errorMsg = $param . ' does not exist';
@@ -81,22 +84,34 @@ class Validator
                     $methodExist = method_exists($static, $ruleKey);
                     if (!$methodExist) {
                         $errorCount++;
-                        $errorMsg = "$param rule: $ruleKey does not support, please check or request PR";
+                        $errorMsg = "$paramName rule: $ruleKey does not support, please check or request PR";
                         $message[] = $errorMsg;
+                        $detail[] = [
+                            'param' => $paramName,
+                            'rule' => $ruleKey,
+                            'value' => $data[$param],
+                            'reason' => 'rule not support'
+                        ];
                         continue;
                     }
                     $validateResult = $static->$ruleKey($data[$param], $ruleValue);
                     if (!$validateResult) {//验证不通过 记录错误信息
                         $errorCount++;
-                        $errorMsg = str_replace('$paramName', $param, $static->allValidateType[$ruleKey]);
+                        $errorMsg = str_replace('$paramName', $paramName, $static->allValidateType[$ruleKey]);
                         $errorMsg = str_replace('$data', $ruleValue, $errorMsg);
                         $message[] = $errorMsg;
+                        $detail[] = [
+                            'param' => $paramName,
+                            'rule' => $ruleKey,
+                            'value' => $data[$param],
+                            'reason' => "result: $validateResult"
+                        ];
                     }
                 }
             }
         }
 
-        return ['count' => $errorCount, 'errors' => $message,];
+        return ['count' => $errorCount, 'errors' => $message, 'detail' => $detail];
     }
 
 //    public function __call($name, $arguments)
