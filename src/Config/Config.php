@@ -111,7 +111,7 @@ class Config extends SetPath
         }
         if ($canCache) {
             if (!file_exists($cachePath)) {
-                mkdir($cachePath);
+                mkdir($cachePath, 0777, true);
             }
             file_put_contents($cacheFile, '<?php return ' . var_export($config, true) . ';');
         } else {
