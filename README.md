@@ -16,6 +16,7 @@
 
 ### update-log
 
+ - `2.4.2` 2023-09-23 fix framework bugs & add features
  - `2.4.1` 2023-06-30 fix script autoload.php path
  - `2.4.0` 2023-06-30 add Config & Env
  - `2.3.0` 2023-05-19 add get-dir-files

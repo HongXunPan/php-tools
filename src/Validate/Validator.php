@@ -1,6 +1,6 @@
 <?php
 
-/** @noinspection PhpUnusedPrivateMethodInspection */
+/** @noinspection PhpUnusedprotectedMethodInspection */
 
 /**
  * 仿制laravel的验证器
@@ -19,7 +19,7 @@ use Exception;
 
 class Validator
 {
-    private $allValidateType = [
+    protected $allValidateType = [
         'required' => '$paramName is required',
         'eq' => '$paramName must equal to $data',
         'neq' => '$paramName must not equal to $data',
@@ -104,7 +104,7 @@ class Validator
 //        return true;
 //    }
 
-    private function required($value)
+    protected function required($value)
     {
         if (!isset($value)) {
             return false;
@@ -112,47 +112,47 @@ class Validator
         return true;
     }
 
-    private function eq($value, $expect)
+    protected function eq($value, $expect)
     {
         return $value == $expect;
     }
 
-    private function neq($value, $expect)
+    protected function neq($value, $expect)
     {
         return $value != $expect;
     }
 
-    private function gt($value, $expect)
+    protected function gt($value, $expect)
     {
         return $value > $expect;
     }
 
-    private function egt($value, $expect)
+    protected function egt($value, $expect)
     {
         return $value >= $expect;
     }
 
-    private function lt($value, $expect)
+    protected function lt($value, $expect)
     {
         return $value < $expect;
     }
 
-    private function elt($value, $expect)
+    protected function elt($value, $expect)
     {
         return $value <= $expect;
     }
 
-    private function in($value, $expect)
+    protected function in($value, $expect)
     {
         return in_array($value, json_decode($expect, true));
     }
 
-    private function notnull($value)
+    protected function notnull($value)
     {
         return !($value === null || trim($value) === '');
     }
 
-    private function int($value)
+    protected function int($value)
     {
         return ($value == intval($value) && $value !== null);
     }
