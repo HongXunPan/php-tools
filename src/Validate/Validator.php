@@ -1,6 +1,6 @@
 <?php
 
-/** @noinspection PhpUnusedPrivateMethodInspection */
+/** @noinspection PhpUnused protectedMethodInspection */
 
 /**
  * 仿制laravel的验证器
@@ -19,7 +19,7 @@ use Exception;
 
 class Validator
 {
-    private $allValidateType = [
+    protected $allValidateType = [
         'required' => '$paramName is required',
         'eq' => '$paramName must equal to $data',
         'neq' => '$paramName must not equal to $data',
@@ -41,7 +41,7 @@ class Validator
      */
     public static function validateOrThrow(array $data, array $rules, $throwFirst = false)
     {
-        $result = self::validate($data, $rules);
+        $result = static::validate($data, $rules);
         if ($result['count'] === 0) {
             return true;
         }
@@ -59,11 +59,14 @@ class Validator
      */
     public static function validate(array $data, array $options)
     {
-        $static = new self();
+        $static = new static();
         $errorCount = 0;
         $message = [];
+        $detail = [];
         if (!empty($options)) {
             foreach ($options as $param => $rules) {
+                @list($param, $paramName) = explode(':', $param);
+                $paramName = isset($paramName) ? $paramName : $param;
                 if (!isset($data[$param])) {
                     $errorCount++;
                     $errorMsg = $param . ' does not exist';
@@ -81,22 +84,34 @@ class Validator
                     $methodExist = method_exists($static, $ruleKey);
                     if (!$methodExist) {
                         $errorCount++;
-                        $errorMsg = "$param rule: $ruleKey does not support, please check or request PR";
+                        $errorMsg = "$paramName rule: $ruleKey does not support, please check or request PR";
                         $message[] = $errorMsg;
+                        $detail[] = [
+                            'param' => $paramName,
+                            'rule' => $ruleKey,
+                            'value' => $data[$param],
+                            'reason' => 'rule not support'
+                        ];
                         continue;
                     }
                     $validateResult = $static->$ruleKey($data[$param], $ruleValue);
                     if (!$validateResult) {//验证不通过 记录错误信息
                         $errorCount++;
-                        $errorMsg = str_replace('$paramName', $param, $static->allValidateType[$ruleKey]);
+                        $errorMsg = str_replace('$paramName', $paramName, $static->allValidateType[$ruleKey]);
                         $errorMsg = str_replace('$data', $ruleValue, $errorMsg);
                         $message[] = $errorMsg;
+                        $detail[] = [
+                            'param' => $paramName,
+                            'rule' => $ruleKey,
+                            'value' => $data[$param],
+                            'reason' => "result: $validateResult"
+                        ];
                     }
                 }
             }
         }
 
-        return ['count' => $errorCount, 'errors' => $message,];
+        return ['count' => $errorCount, 'errors' => $message, 'detail' => $detail];
     }
 
 //    public function __call($name, $arguments)
@@ -104,7 +119,7 @@ class Validator
 //        return true;
 //    }
 
-    private function required($value)
+    protected function required($value)
     {
         if (!isset($value)) {
             return false;
@@ -112,47 +127,47 @@ class Validator
         return true;
     }
 
-    private function eq($value, $expect)
+    protected function eq($value, $expect)
     {
         return $value == $expect;
     }
 
-    private function neq($value, $expect)
+    protected function neq($value, $expect)
     {
         return $value != $expect;
     }
 
-    private function gt($value, $expect)
+    protected function gt($value, $expect)
     {
         return $value > $expect;
     }
 
-    private function egt($value, $expect)
+    protected function egt($value, $expect)
     {
         return $value >= $expect;
     }
 
-    private function lt($value, $expect)
+    protected function lt($value, $expect)
     {
         return $value < $expect;
     }
 
-    private function elt($value, $expect)
+    protected function elt($value, $expect)
     {
         return $value <= $expect;
     }
 
-    private function in($value, $expect)
+    protected function in($value, $expect)
     {
         return in_array($value, json_decode($expect, true));
     }
 
-    private function notnull($value)
+    protected function notnull($value)
     {
         return !($value === null || trim($value) === '');
     }
 
-    private function int($value)
+    protected function int($value)
     {
         return ($value == intval($value) && $value !== null);
     }
