@@ -67,11 +67,9 @@ class Validator
             foreach ($options as $param => $rules) {
                 @list($param, $paramName) = explode(':', $param);
                 $paramName = isset($paramName) ? $paramName : $param;
-                if (!isset($data[$param])) {
-                    $errorCount++;
-                    $errorMsg = $param . ' does not exist';
-                    $message[] = $errorMsg;
-                    continue;
+                $value = null;
+                if (isset($data[$param])) {
+                    $value = $data[$param];
                 }
                 $rules = explode('|', $rules);
                 foreach ($rules as $rule) {
@@ -89,12 +87,12 @@ class Validator
                         $detail[] = [
                             'param' => $paramName,
                             'rule' => $ruleKey,
-                            'value' => $data[$param],
+                            'value' => $value,
                             'reason' => 'rule not support'
                         ];
                         continue;
                     }
-                    $validateResult = $static->$ruleKey($data[$param], $ruleValue);
+                    $validateResult = $static->$ruleKey($value, $ruleValue);
                     if (!$validateResult) {//验证不通过 记录错误信息
                         $errorCount++;
                         $errorMsg = str_replace('$paramName', $paramName, $static->allValidateType[$ruleKey]);
@@ -103,8 +101,8 @@ class Validator
                         $detail[] = [
                             'param' => $paramName,
                             'rule' => $ruleKey,
-                            'value' => $data[$param],
-                            'reason' => "result: $validateResult"
+                            'value' => $value,
+                            'reason' => "result: " . json_encode($validateResult),
                         ];
                     }
                 }
