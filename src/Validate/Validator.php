@@ -67,11 +67,18 @@ class Validator
             foreach ($options as $param => $rules) {
                 @list($param, $paramName) = explode(':', $param);
                 $paramName = isset($paramName) ? $paramName : $param;
+                $rules = explode('|', $rules);
+
                 $value = null;
                 if (isset($data[$param])) {
                     $value = $data[$param];
+                } else { //值不存在
+                    if (in_array('required', $rules)) {
+                        $rules = ['required'];
+                    } else {
+                        continue;
+                    }
                 }
-                $rules = explode('|', $rules);
                 foreach ($rules as $rule) {
                     $rule = explode(':', $rule);
                     $ruleKey = $rule[0];
