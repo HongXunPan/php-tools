@@ -21,13 +21,13 @@ class Validator
 {
     protected $allValidateType = [
         'required' => '$paramName is required',
-        'eq' => '$paramName must equal to $data',
-        'neq' => '$paramName must not equal to $data',
-        'gt' => '$paramName must greater than $data',
-        'egt' => '$paramName must greater than $data or equal to $data',
-        'lt' => '$paramName must less than $data',
-        'elt' => '$paramName must less than $data or equal to $data',
-        'in' => '$paramName must in $data', //options 必须是json字符串格式 eg: ['mid' => 'in_array:[11]']
+        'eq' => '$paramName must equal to $rule',
+        'neq' => '$paramName must not equal to $rule',
+        'gt' => '$paramName must greater than $rule',
+        'egt' => '$paramName must greater than $rule or equal to $rule',
+        'lt' => '$paramName must less than $rule',
+        'elt' => '$paramName must less than $rule or equal to $rule',
+        'in' => '$paramName must in $rule', //options 必须是json字符串格式 eg: ['mid' => 'in_array:[11]']
         'notnull' => '$paramName can not be null',
         'int' => '$paramName must be int',
     ];
@@ -93,8 +93,9 @@ class Validator
                         $message[] = $errorMsg;
                         $detail[] = [
                             'param' => $paramName,
-                            'rule' => $ruleKey,
                             'value' => $value,
+                            'rule' => $ruleKey,
+                            'rule_value' => $ruleValue,
                             'reason' => 'rule not support'
                         ];
                         continue;
@@ -103,12 +104,13 @@ class Validator
                     if (!$validateResult) {//验证不通过 记录错误信息
                         $errorCount++;
                         $errorMsg = str_replace('$paramName', $paramName, $static->allValidateType[$ruleKey]);
-                        $errorMsg = str_replace('$data', $ruleValue, $errorMsg);
+                        $errorMsg = str_replace('$rule', $ruleValue, $errorMsg);
                         $message[] = $errorMsg;
                         $detail[] = [
                             'param' => $paramName,
-                            'rule' => $ruleKey,
                             'value' => $value,
+                            'rule' => $ruleKey,
+                            'rule_value' => $ruleValue,
                             'reason' => "result: " . json_encode($validateResult),
                         ];
                     }
