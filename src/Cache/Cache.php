@@ -43,13 +43,15 @@ class Cache
         } else {
             $this->redis = Redis::connection();
         }
+        return static::getInstance();
     }
 
     private $getCache = true;
+
     public function setCacheMode($getCache = true)
     {
         $this->getCache = $getCache;
-        return $this;
+        return static::getInstance();
     }
 
     public static function remember($redisKey, $ttl, callable $function)
