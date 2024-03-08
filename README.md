@@ -16,6 +16,7 @@
 
 ### update-log
 
+ - `2.6.0` 2024-03-06 OpensslEncrypt
  - `2.5.0` 2024-02-18 cache remember
  - `2.4.2` 2023-09-23 fix framework bugs & add features
  - `2.4.1` 2023-06-30 fix script autoload.php path
