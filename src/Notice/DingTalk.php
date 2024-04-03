@@ -1,6 +1,6 @@
 <?php
 
-namespace HongXunPan\Notice;
+namespace HongXunPan\Tools\Notice;
 
 class DingTalk{
     public static function send(){
