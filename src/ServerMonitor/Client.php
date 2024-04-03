@@ -1,6 +1,6 @@
 <?php
 
-namespace HongXunPan\ServerMonitor;
+namespace HongXunPan\Tools\ServerMonitor;
 
 class Client{
 
