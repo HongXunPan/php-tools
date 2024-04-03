@@ -9,8 +9,6 @@ class BacktraceHelper
      */
     const DEFAULT_IGNORED_PATHS = [
         'vendor',
-        'system',
-        'core',
     ];
 
     /**
