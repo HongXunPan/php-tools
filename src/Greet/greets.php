@@ -96,3 +96,31 @@ if (( $nge_Hour >= 19) && ($nge_Hour <= 21))
     $nge_warmprompt = "忙碌了一天，累了吧？去看看最新的新闻资讯醒醒脑吧！      --编程笔记";
 if (( $nge_Hour >= 22) && ($nge_Hour <= 23))
     $nge_warmprompt = "这么晚了，小伙伴还在上网？早点洗洗睡吧，睡前记得洗洗脸喔！明天一天都会萌萌哒！      --编程笔记";
+
+
+switch ($hour) {
+    case $hour < 6:
+        $text="又是一个不眠夜!";
+        break;
+    case $hour < 9:
+        $text="新的一天开始了!";
+        break;
+    case $hour < 12:
+        $text="上午工作顺利吗？";
+        break;
+    case $hour < 14:
+        $text="中午好！吃饭了吗？";
+        break;
+    case $hour < 17:
+        $text="下午好！别打盹呼哦！";
+        break;
+    case $hour < 19:
+        $text="傍晚好！还在加班吗？";
+        break;
+    case $hour < 22:
+        $text="晚上好！夜色好美啊！";
+        break;
+    default:
+        $text="我欲修仙,法力无边。";
+        break;
+}
