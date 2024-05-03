@@ -17,7 +17,8 @@
     "require": {
         "php": ">=5.6",
         "hongxunpan/db": "1.0.2",
-        "wangju/ding-notice": "^1.0"
+        "wangju/ding-notice": "^1.0",
+        "elasticsearch/elasticsearch": "^8.8"
     },
     "require-dev": {
         "symfony/var-dumper": "^6.0"
