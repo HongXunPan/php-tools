@@ -7,6 +7,8 @@ use HongXunPan\DB\DBContract;
 
 class ElasticSearch extends DBContract
 {
+    protected $connectionClass = ElasticSearchConnection::class;
+
     protected function ping($connection)
     {
         return $connection;
