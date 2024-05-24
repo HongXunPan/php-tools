@@ -34,10 +34,7 @@ trait SSETrait
         if (!$this->corsOriginHeaders) {
             $this->corsOriginHeaders = [
                 'Access-Control-Allow-Origin' => '*',
-                'Access-Control-Expose-Headers' => 'X-Requested-With,X-FAN-CACHE,X-Kang-Token',
-                'Access-Control-Allow-Methods' => 'GET,POST,OPTIONS,DELETE',
-                'Access-Control-Allow-Headers' => 'Content-Type,Cache-Control,X-Kang-Token,X-FAN-CACHE',
-                'Access-Control-Max-Age' => 1728000
+                'Access-Control-Allow-Credentials' => 'true',
             ];
         }
         foreach ($this->corsOriginHeaders as $key => $item) {
