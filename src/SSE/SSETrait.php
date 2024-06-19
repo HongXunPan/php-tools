@@ -52,6 +52,12 @@ trait SSETrait
         $this->echoData("retry:$microMinutes\n\n");
     }
 
+    protected function heartbeat($comment = 'heartbeat')
+    {
+        $msg = ":$comment\n\n";
+        $this->echoData($msg);
+    }
+
     /**
      * @param $data
      * @param int|string|null $id
@@ -69,7 +75,7 @@ trait SSETrait
         if (!is_string($data)) {
             $data = json_encode($data);
         }
-        $response .= "data:$data\n";
+        $response .= "data:$data\n"; //如果数据很长，可以分成多行，最后一行用\n\n结尾，前面行都用\n结尾。
         $response .= "\n";
         $this->echoData($response);
     }
