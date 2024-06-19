@@ -71,7 +71,9 @@ trait SSETrait
             $id = uniqid();
         }
         $response .= "id:$id\n";
-        $response .= "event:$event\n";
+        if ($event != 'message') {
+            $response .= "event:$event\n";
+        }
         if (!is_string($data)) {
             $data = json_encode($data);
         }
