@@ -14,6 +14,8 @@ class QueryBuilder
     private $fields;
     /** @var array $where */
     private $where = [];
+    /** @var array $group */
+    private $group = [];
     /** @var array $order */
     private $order = [];
     /** @var int $limit */
@@ -154,13 +156,33 @@ class QueryBuilder
         return ' order by' . implode(',', $this->order);
     }
 
+    public function groupBy($group)
+    {
+        if (is_array($group)) {
+            foreach ($group as $item) {
+                $this->group[] = "`$item`";
+            }
+        } else {
+            $this->group[] = "`$group`";
+        }
+        return $this;
+    }
+
+    private function buildGroupBy()
+    {
+        if (!$this->group) {
+            return '';
+        }
+        return ' group by' . implode(',', $this->group);
+    }
+
     public function toSql()
     {
         $sql = '';
         $table = $this->db ? $this->db . '.' . $this->table : $this->table;
         switch (strtolower($this->mode)) {
             case 'select':
-                $sql = "select " . implode(',', $this->fields) . " from $table " . $this->buildWhere() . $this->buildOrderBy() . $this->buildLimit(true);
+                $sql = "select " . implode(',', $this->fields) . " from $table " . $this->buildWhere() . $this->buildGroupBy() . $this->buildOrderBy() . $this->buildLimit(true);
                 break;
         }
         return $sql;
