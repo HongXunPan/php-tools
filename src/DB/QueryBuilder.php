@@ -176,6 +176,33 @@ class QueryBuilder
         return ' group by' . implode(',', $this->group);
     }
 
+    private $updateData;
+    public function update($data)
+    {
+        $this->mode = 'update';
+        $this->updateData = $data;
+        return $this;
+    }
+
+    private function buildUpdateSet()
+    {
+        $set = '';
+        foreach ($this->updateData as $key => $value) {
+            if ($set) {
+                $set .= ',';
+            }
+            if (is_null($value)) {
+                $setValue = 'null';
+            } else {
+                $setValue = "'" . addslashes($value) . "'";
+            }
+            $set .= "`$key` = $setValue";
+        }
+        if (!$set) {
+            throw new \Exception('update data is empty');
+        }
+    }
+
     public function toSql()
     {
         $sql = '';
@@ -183,6 +210,9 @@ class QueryBuilder
         switch (strtolower($this->mode)) {
             case 'select':
                 $sql = "select " . implode(',', $this->fields) . " from $table " . $this->buildWhere() . $this->buildGroupBy() . $this->buildOrderBy() . $this->buildLimit(true);
+                break;
+            case 'update':
+                $sql = "update $table set " .$this->buildUpdateSet() . $this->buildWhere() . $this->buildLimit(false);
                 break;
         }
         return $sql;
