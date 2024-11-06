@@ -177,6 +177,7 @@ class QueryBuilder
     }
 
     private $updateData;
+
     public function update($data)
     {
         $this->mode = 'update';
@@ -212,7 +213,10 @@ class QueryBuilder
                 $sql = "select " . implode(',', $this->fields) . " from $table " . $this->buildWhere() . $this->buildGroupBy() . $this->buildOrderBy() . $this->buildLimit(true);
                 break;
             case 'update':
-                $sql = "update $table set " .$this->buildUpdateSet() . $this->buildWhere() . $this->buildLimit(false);
+                $sql = "update $table set " . $this->buildUpdateSet() . $this->buildWhere() . $this->buildLimit(false);
+                break;
+            case 'delete':
+                $sql = "delete from $table " . $this->buildWhere() . $this->buildLimit(false);
                 break;
         }
         return $sql;
