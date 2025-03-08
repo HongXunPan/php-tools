@@ -6,9 +6,6 @@ use HongXunPan\Tools\Abstracts\SingletonAbstract;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
 
-/**
- * @method static void log($level, $message, array $context = [])
- */
 class Log extends SingletonAbstract implements LoggerInterface
 {
     use LoggerTrait;
@@ -25,6 +22,8 @@ class Log extends SingletonAbstract implements LoggerInterface
         if (!is_writable($logPath)) {
             throw new \Exception("log path is not writable");
         }
+        //自动添加/
+        $logPath = rtrim($logPath, '/') . '/';
         $this->logPath = $logPath;
     }
 
@@ -48,11 +47,6 @@ class Log extends SingletonAbstract implements LoggerInterface
         return $log;
     }
 
-    public static function __callStatic($name, $arguments)
-    {
-        return self::getInstance()->$name(...$arguments);
-    }
-
     protected function write($level, $msg, $data = [])
     {
 //        $log = [
@@ -64,8 +58,9 @@ class Log extends SingletonAbstract implements LoggerInterface
 //        $log = json_encode($log, JSON_UNESCAPED_UNICODE);
 //        @file_put_contents($this->logPath . '/' . $level . date('Y-m-d') . '.log', $log . PHP_EOL, FILE_APPEND);
 
-        $time = date('Y-m-d H:i:s');
-        $day = date('Ymd');
+        $now = time();
+        $time = date('Y-m-d H:i:s', $now);
+        $day = date('Y-m-d', $now);
         $log = "[" . strtoupper($level) . "] " . $time . ' - ' . posix_getpid();
         if (php_sapi_name() != 'cli') {
             $uri = $_SERVER['REQUEST_URI'];
@@ -80,9 +75,9 @@ class Log extends SingletonAbstract implements LoggerInterface
         if ($data) {
             $log .= PHP_EOL . json_encode($data, JSON_PRETTY_PRINT);
         }
-        $log .= PHP_EOL;
-        $fileName = $this->channel ? $this->channel . '-' . $day . "log" : $level . "-" . $day . "log";
-        @file_put_contents($this->logPath . '/' . $fileName, $log . PHP_EOL, FILE_APPEND);
+        $log .= PHP_EOL . PHP_EOL;
+        $fileName = $this->channel ? $this->channel . '-' . $day . ".log" : $level . "-" . $day . ".log";
+        @file_put_contents($this->logPath . $fileName, $log, FILE_APPEND);
     }
 
     /** @noinspection PhpElementIsNotAvailableInCurrentPhpVersionInspection
