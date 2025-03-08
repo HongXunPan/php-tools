@@ -53,7 +53,11 @@ class Log extends SingletonAbstract implements LoggerInterface
         @file_put_contents($this->logPath . '/' . $level . substr($time, 0, 10) . '.log', $log . PHP_EOL, FILE_APPEND);
     }
 
-    public function log($level, $message, array $context = [])
+    /** @noinspection PhpElementIsNotAvailableInCurrentPhpVersionInspection
+     * @noinspection PhpUndefinedClassInspection
+     * @noinspection PhpLanguageLevelInspection
+     */
+    public function log($level, string|\Stringable $message, array $context = []): void
     {
         $this->write($level, $message, $context);
     }
