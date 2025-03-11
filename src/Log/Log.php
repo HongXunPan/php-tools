@@ -67,13 +67,13 @@ class Log extends SingletonAbstract implements LoggerInterface
             $host = $_SERVER['HTTP_HOST'];
             $http = $_SERVER['REQUEST_SCHEME'];
             $url = $http . '://' . $host . $uri;
-            $log .= ' - ' . $url;
+            $log .= ' - [' . $_SERVER['REQUEST_METHOD'] . '] - ' . $url;
         }
         if ($msg) {
             $log .= PHP_EOL . $msg;
         }
         if ($data) {
-            $log .= PHP_EOL . json_encode($data, JSON_PRETTY_PRINT);
+            $log .= PHP_EOL . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         }
         $log .= PHP_EOL . PHP_EOL;
         $fileName = $this->channel ? $this->channel . '-' . $day . ".log" : $level . "-" . $day . ".log";
