@@ -15,7 +15,7 @@ class EventDispatcher
      */
     public function addListener(Event $event, callable $listener, int $priority)
     {
-        $eventName = $event->event;
+        $eventName = $event->name;
         if (!isset($this->listeners[$eventName])) {
             $this->listeners[$eventName] = [];
         }
@@ -36,10 +36,10 @@ class EventDispatcher
      */
     public function dispatch(Event $event)
     {
-        $eventName = $event->event;
+        $eventName = $event->name;
         if (isset($this->listeners[$eventName])) {
             foreach ($this->listeners[$eventName] as $listenerData) {
-                call_user_func($listenerData['listener'], 'handle');
+                call_user_func($listenerData['listener'], $event->data);
             }
         }
     }

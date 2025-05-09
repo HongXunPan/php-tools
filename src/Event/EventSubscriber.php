@@ -4,7 +4,13 @@ namespace HongXunPan\Tools\Event;
 
 abstract class EventSubscriber
 {
-    private Event $event;
+    protected Event $event;
+
+    final public function doHandle(Event $event)
+    {
+        $this->event = $event;
+        $this->handle();
+    }
 
     abstract public function handle();
 }
