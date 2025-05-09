@@ -1,10 +1,13 @@
-<?php /** @noinspection PhpLanguageLevelInspection */
+<?php /** @noinspection PhpUndefinedClassInspection */
+
+/** @noinspection PhpLanguageLevelInspection */
 
 namespace HongXunPan\Tools\Event;
 
 abstract class EventSubscriber
 {
     protected Event $event;
+    protected int $priority = 0;
 
     final public function doHandle(Event $event)
     {

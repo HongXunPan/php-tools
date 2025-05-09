@@ -9,13 +9,12 @@ class EventDispatcher
     /**
      * 订阅事件
      *
-     * @param Event $event 事件对象
+     * @param string $eventName 事件名称
      * @param callable $listener 事件监听器
      * @param int $priority 优先级（数字越大，优先级越高）
      */
-    public function addListener(Event $event, callable $listener, int $priority)
+    public function addListener(string $eventName, callable $listener, int $priority = 0)
     {
-        $eventName = $event->name;
         if (!isset($this->listeners[$eventName])) {
             $this->listeners[$eventName] = [];
         }
