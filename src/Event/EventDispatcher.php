@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpLanguageLevelInspection */
+<?php /** @noinspection PhpUndefinedClassInspection */
+
+/** @noinspection PhpLanguageLevelInspection */
 
 namespace HongXunPan\Tools\Event;
 
@@ -13,7 +15,7 @@ class EventDispatcher
      * @param callable $listener 事件监听器
      * @param int $priority 优先级（数字越大，优先级越高）
      */
-    public function addListener(string $eventName, callable $listener, int $priority = 0)
+    public function addListener(string $eventName, callable $listener, $priority = 0)
     {
         if (!isset($this->listeners[$eventName])) {
             $this->listeners[$eventName] = [];

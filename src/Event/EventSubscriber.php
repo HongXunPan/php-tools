@@ -7,7 +7,7 @@ namespace HongXunPan\Tools\Event;
 abstract class EventSubscriber
 {
     protected Event $event;
-    protected static int $priority = 0;
+    const int PRIORITY = 0;
 
     final public function doHandle(Event $event)
     {
