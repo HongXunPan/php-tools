@@ -7,7 +7,8 @@ namespace HongXunPan\Tools\Event;
 abstract class EventSubscriber
 {
     protected Event $event;
-    const int PRIORITY = 0;
+    public const EVENT_NAME = Event::class;
+    public const PRIORITY = 0;
 
     final public function __construct(Event $event)
     {

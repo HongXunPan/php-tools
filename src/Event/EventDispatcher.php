@@ -37,7 +37,7 @@ class EventDispatcher
      */
     public function dispatch(Event $event)
     {
-        $eventName = $event->name;
+        $eventName = $event::class;
         if (isset($this->listeners[$eventName])) {
             foreach ($this->listeners[$eventName] as $listenerData) {
                 if (is_callable($listenerData['listener'])) {
@@ -46,7 +46,7 @@ class EventDispatcher
                 }
                 if (is_array($listenerData['listener'])
                     && count($listenerData['listener']) == 2
-                    && is_subclass_of($listenerData['listener'], 'HongXunPan\Tools\Event\EventSubscriber')
+                    && is_subclass_of($listenerData['listener'][0], 'HongXunPan\Tools\Event\EventSubscriber')
                 ) {
                     $subscriber = new $listenerData['listener'][0]($event);
                     call_user_func([$subscriber, $listenerData['listener'][1]]);
