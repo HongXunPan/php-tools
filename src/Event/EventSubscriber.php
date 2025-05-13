@@ -9,10 +9,9 @@ abstract class EventSubscriber
     protected Event $event;
     const int PRIORITY = 0;
 
-    final public function doHandle(Event $event)
+    final public function __construct(Event $event)
     {
         $this->event = $event;
-        $this->handle();
     }
 
     abstract public function handle();
