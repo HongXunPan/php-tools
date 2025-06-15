@@ -30,6 +30,12 @@ class Validator
         'in' => '$paramName must in $rule', //options 必须是json字符串格式 eg: ['mid' => 'in_array:[11]']
         'notnull' => '$paramName can not be null',
         'int' => '$paramName must be int',
+        'array' => '$paramName must be array',
+        'string' => '$paramName must be string',
+        'len' => '$paramName\'s length must in $rule',
+        'lenMin' => '$paramName\'s length must be bigger than $rule',
+        'lenMax' => '$paramName\'s length must be smaller than $rule',
+        'time' => '$paramName must be time',
     ];
 
     /**
@@ -63,6 +69,7 @@ class Validator
         $errorCount = 0;
         $message = [];
         $detail = [];
+        $validatedData = [];
         if (!empty($options)) {
             foreach ($options as $param => $rules) {
                 @list($param, $paramName) = explode(':', $param);
@@ -113,12 +120,14 @@ class Validator
                             'rule_value' => $ruleValue,
                             'reason' => "result: " . json_encode($validateResult),
                         ];
+                    } else {
+                        $validatedData[$param] = $value;
                     }
                 }
             }
         }
 
-        return ['count' => $errorCount, 'errors' => $message, 'detail' => $detail];
+        return ['count' => $errorCount, 'errors' => $message, 'detail' => $detail, 'validated_data' => $validatedData];
     }
 
 //    public function __call($name, $arguments)
@@ -177,5 +186,38 @@ class Validator
     protected function int($value)
     {
         return ($value == intval($value) && $value !== null);
+    }
+
+    /** @noinspection PhpLanguageLevelInspection */
+    protected function array($value)
+    {
+        return is_array($value);
+    }
+
+    protected function string($value)
+    {
+        return is_string($value);
+    }
+
+    protected function len($value, $expect)
+    {
+        list($min, $max) = explode('-', $expect);
+        $len = iconv_strlen($value);
+        return $len >= $min && $len <= $max;
+    }
+
+    protected function lenMin($value, $expect)
+    {
+        return iconv_strlen($value) > $expect;
+    }
+
+    protected function lenMax($value, $expect)
+    {
+        return iconv_strlen($value) < $expect;
+    }
+
+    protected function time($value)
+    {
+        return strtotime($value) !== false;
     }
 }
