@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpLanguageLevelInspection */
+<?php /** @noinspection PhpUndefinedClassInspection */
+
+/** @noinspection PhpLanguageLevelInspection */
 
 namespace HongXunPan\Tools\Event;
 
@@ -9,13 +11,12 @@ class EventDispatcher
     /**
      * 订阅事件
      *
-     * @param Event $event 事件对象
+     * @param string $eventName 事件名称
      * @param callable $listener 事件监听器
      * @param int $priority 优先级（数字越大，优先级越高）
      */
-    public function addListener(Event $event, callable $listener, int $priority)
+    public function addListener(string $eventName, array|string|callable $listener, $priority = 0)
     {
-        $eventName = $event->event;
         if (!isset($this->listeners[$eventName])) {
             $this->listeners[$eventName] = [];
         }
@@ -36,10 +37,20 @@ class EventDispatcher
      */
     public function dispatch(Event $event)
     {
-        $eventName = $event->event;
+        $eventName = $event::class;
         if (isset($this->listeners[$eventName])) {
             foreach ($this->listeners[$eventName] as $listenerData) {
-                call_user_func($listenerData['listener'], 'handle');
+                if (is_callable($listenerData['listener'])) {
+                    call_user_func($listenerData['listener']);
+                    continue;
+                }
+                if (is_array($listenerData['listener'])
+                    && count($listenerData['listener']) == 2
+                    && is_subclass_of($listenerData['listener'][0], 'HongXunPan\Tools\Event\EventSubscriber')
+                ) {
+                    $subscriber = new $listenerData['listener'][0]($event);
+                    call_user_func([$subscriber, $listenerData['listener'][1]]);
+                }
             }
         }
     }

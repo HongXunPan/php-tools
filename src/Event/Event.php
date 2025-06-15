@@ -1,8 +1,9 @@
-<?php
+<?php /** @noinspection PhpLanguageLevelInspection */
 
 namespace HongXunPan\Tools\Event;
 
 abstract class Event
 {
-    public string $event;
+    public string $name;
+    public array $data;
 }
