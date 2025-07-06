@@ -73,7 +73,7 @@ class Log extends SingletonAbstract implements LoggerInterface
             $log .= PHP_EOL . $msg;
         }
         if ($data) {
-            $log .= PHP_EOL . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            $log .= PHP_EOL . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
         $log .= PHP_EOL . PHP_EOL;
         $fileName = $this->channel ? $this->channel . '-' . $day . ".log" : $level . "-" . $day . ".log";
