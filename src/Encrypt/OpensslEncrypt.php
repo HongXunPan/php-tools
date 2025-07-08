@@ -2,6 +2,9 @@
 
 namespace HongXunPan\Tools\Encrypt;
 
+use InvalidArgumentException;
+use RuntimeException;
+
 /**
  *
  * @method static bool encrypt(string $str, string $algo)
@@ -14,6 +17,19 @@ class OpensslEncrypt
 
     const AES_256_CBC = 'aes-256-cbc';
     const AES_128_CBC = 'aes-128-cbc';
+    const AES_192_GCM = 'aes-192-gcm';
+    const AES_128_GCM = 'aes-128-gcm';
+    const AES_256_GCM = 'aes-256-gcm';
+    const CHACHA20_POLY1305 = 'chacha20-poly1305';
+    const MIN_PHP_VERSION_FOR_AEAD = '7.1.0';
+    const DEFAULT_FIXED_LENGTH = 32; // 固定长度（需大于 nonce + tag 长度）
+
+    const SUPPORTED_AEAD_MODES = [
+        'aes-128-gcm',
+        'aes-192-gcm',
+        'aes-256-gcm',
+        'chacha20-poly1305'
+    ];
 
     public static $algo = [
         "aes-128-cbc", "aes-128-cbc-hmac-sha1", "aes-128-cbc-hmac-sha256", "aes-128-ccm", "aes-128-cfb", "aes-128-cfb1", "aes-128-cfb8", "aes-128-ctr",
@@ -86,7 +102,6 @@ class OpensslEncrypt
         return openssl_encrypt($str, $algo, $this->secretKey, 0, $this->iv);
     }
 
-    //解密
 
     /**
      * @param $data
@@ -102,5 +117,94 @@ class OpensslEncrypt
             return false;
         }
         return openssl_decrypt($data, $algo, $this->secretKey, 0, $this->iv);
+    }
+
+    /**
+     * 定长 AEAD 加密（含 nonce + cipher + tag），自动计算输出长度
+     *
+     * @param string $str 明文
+     * @param string $algo 加密算法（必须是 AEAD 类型）
+     * @return string|false 定长密文或 false
+     */
+    public function encryptFixedLengthWithNonceTag($str, $algo = self::AES_256_GCM)
+    {
+        if (!in_array($algo, self::SUPPORTED_AEAD_MODES)) {
+            throw new InvalidArgumentException("Unsupported AEAD algorithm: {$algo}");
+        }
+
+        if (version_compare(PHP_VERSION, self::MIN_PHP_VERSION_FOR_AEAD) < 0) {
+            throw new RuntimeException("AEAD algorithms require PHP " . self::MIN_PHP_VERSION_FOR_AEAD . " or higher.");
+        }
+
+        $ivLength = openssl_cipher_iv_length($algo);
+        $tagLength = 16;
+        $blockSize = 16; // AES block size
+
+        // 计算 payload 长度（向上对齐到块大小）
+        $payloadLength = (strlen($str) + $blockSize) & ~($blockSize - 1);
+
+        // 自动计算最终密文长度
+        $fixedLength = $ivLength + $payloadLength + $tagLength;
+
+        // 填充并截断至 payloadLength
+        $padded = $this->padData($str, $blockSize);
+        $padded = substr($padded, 0, $payloadLength);
+
+        $nonce = openssl_random_pseudo_bytes($ivLength);
+        $tag = null;
+
+        $cipherText = openssl_encrypt($padded, $algo, $this->secretKey, OPENSSL_RAW_DATA, $nonce, $tag);
+
+        return $nonce . $cipherText . $tag; // 返回定长密文
+    }
+
+    protected function padData($data, $blockSize)
+    {
+        $pad = $blockSize - (strlen($data) % $blockSize);
+        return $data . str_repeat(chr($pad), $pad);
+    }
+
+    protected function unPadData($data)
+    {
+        $length = ord($data[strlen($data) - 1]);
+        return substr($data, 0, -$length);
+    }
+
+    /**
+     * 定长 AEAD 解密（提取 nonce + cipher + tag）
+     *
+     * @param string $cipherText 定长密文（RAW 格式）
+     * @param string $algo 加密算法
+     * @return string|false 明文或失败返回 false
+     */
+    public function decryptFixedLengthWithNonceTag($cipherText, $algo = self::AES_256_GCM)
+    {
+        if (!in_array($algo, self::SUPPORTED_AEAD_MODES)) {
+            throw new InvalidArgumentException("Unsupported AEAD algorithm: {$algo}");
+        }
+
+        if (version_compare(PHP_VERSION, self::MIN_PHP_VERSION_FOR_AEAD) < 0) {
+            throw new RuntimeException("AEAD algorithms require PHP " . self::MIN_PHP_VERSION_FOR_AEAD . " or higher.");
+        }
+
+        $ivLength = openssl_cipher_iv_length($algo);
+        $tagLength = 16;
+        $minLength = $ivLength + $tagLength;
+
+        if (strlen($cipherText) < $minLength) {
+            throw new InvalidArgumentException("Cipher text too short for AEAD decryption");
+        }
+
+        $nonce = substr($cipherText, 0, $ivLength);
+        $tag = substr($cipherText, -$tagLength);
+        $cipherPart = substr($cipherText, $ivLength, -$tagLength);
+
+        $plainText = openssl_decrypt($cipherPart, $algo, $this->secretKey, OPENSSL_RAW_DATA, $nonce, $tag);
+
+        if ($plainText === false) {
+            return false;
+        }
+
+        return $this->unPadData($plainText);
     }
 }
