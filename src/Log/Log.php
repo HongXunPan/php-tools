@@ -61,7 +61,8 @@ class Log extends SingletonAbstract implements LoggerInterface
         $now = time();
         $time = date('Y-m-d H:i:s', $now);
         $day = date('Y-m-d', $now);
-        $log = "[" . strtoupper($level) . "] " . $time . ' - ' . posix_getpid();
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+        $log = "[" . strtoupper($level) . "] " . $time . ' - ' . posix_getpid() . ' - ' . $ip;
         if (php_sapi_name() != 'cli') {
             $uri = $_SERVER['REQUEST_URI'];
             $host = $_SERVER['HTTP_HOST'];
