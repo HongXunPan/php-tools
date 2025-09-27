@@ -36,6 +36,7 @@ class Validator
         'lenMin' => '$paramName\'s length must be bigger than $rule',
         'lenMax' => '$paramName\'s length must be smaller than $rule',
         'time' => '$paramName must be time',
+        'timeFormat' => '$paramName must be timeFormat as $rule',
     ];
 
     /**
@@ -219,5 +220,10 @@ class Validator
     protected function time($value)
     {
         return strtotime($value) !== false;
+    }
+
+    protected function timeFormat($value, $expect)
+    {
+        return strtotime($value) !== false && date($expect, strtotime($value)) === $value;
     }
 }
