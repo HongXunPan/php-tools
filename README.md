@@ -8,7 +8,7 @@
 
 - [cli/Progress](readme/cli-progress.md) cli 终端下的任务进度显示
 - [validate/Validator](readme/validate-validator.md) 验证器
-- [lock/RedisLock](readme/redis-lock.md) redis 分布独占锁
+- [lock/RedisLock](readme/redis-lock.md) redis 分布独占锁（推荐使用 `attemptUserLock()` / `withUserLock()`）
 - [draw/RedisDraw](readme/redis-draw.md) redis 抽奖
 - [timeLimitOffers/RedisTimeLimitOffers](readme/redis-time-limit-offers.md) redis 抢购名额
 - [notice/DingTalk] 钉钉消息推送

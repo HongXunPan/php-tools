@@ -31,6 +31,11 @@ class RedisLock
 
     public static function transaction(array $lockConfig, callable $function)
     {
+        return static::withUserLock($lockConfig, $function);
+    }
+
+    public static function withUserLock(array $lockConfig, callable $onAcquired, $onRejected = null)
+    {
         $default = [
 //            'userId' => ,
             'lockName' => null,
@@ -40,21 +45,26 @@ class RedisLock
         $lockConfig = array_merge($default, $lockConfig);
         Validator::validateOrThrow($lockConfig, ['userId' => 'required']);
 
-        $lock = new RedisLock(
+        $lock = new static(
             $lockConfig['userId'],
             $lockConfig['lockName'] ?: null,
             $lockConfig['redis'] ?: null
         );
 
-        $res = $lock->addUserLock(100);//超时时间
-        if ($res === 1) {
-            //do your thing
-            $result = call_user_func($function);
-            $lock->clearUserLock(); //用完释放
-            return $result;
-        } else {
-            throw new LockException("Lock Fail: $lock->userId -> $lock->lockName");
+        $attempt = $lock->attemptUserLock($lockConfig['time']);
+        if ($attempt->isAcquired()) {
+            try {
+                return call_user_func($onAcquired);
+            } finally {
+                $lock->clearUserLock();
+            }
         }
+
+        if (is_callable($onRejected)) {
+            return call_user_func($onRejected, $attempt, $attempt->count());
+        }
+
+        throw LockException::forRejected($lock->userId, $lock->lockName, $attempt->count());
     }
 
     /**
@@ -68,27 +78,46 @@ class RedisLock
             return false;
         }
 
-        $result = $this->incrLockTimes();
-        if ($time != 0 && $result == 1) {
-            $this->redis->expire($this->redisKey, $time);
-        }
-        return $result;
+        return $this->attemptUserLock($time)->count();
     }
 
     /**
-     * 一定时间内频繁请求的用户
-     * 超过设定次数则特别标记重点观察
-     * @return int
+     * @param int $time
+     * @return RedisLockAttemptResult
      */
-    private function incrLockTimes()
+    public function attemptUserLock($time = 10)
     {
-        $times = $this->redis->incr($this->redisKey);
+        if (empty($this->userId)) {
+            return new RedisLockAttemptResult(0);
+        }
+
+        $count = $this->incrementLockTimesAtomically((int)$time);
         /** @noinspection PhpStatementHasEmptyBodyInspection */
-        if ($times >= $this->maxTimes) {
+        if ($count >= $this->maxTimes) {
             //一定时间内发多个请求 超过最大限制
             //do some log
         }
-        return $times;
+
+        return new RedisLockAttemptResult($count);
+    }
+
+    private function incrementLockTimesAtomically($time)
+    {
+        return (int)$this->redis->eval(
+            $this->lockAttemptLuaScript(),
+            [$this->redisKey, (int)$time],
+            1
+        );
+    }
+
+    private function lockAttemptLuaScript()
+    {
+        return "local count = redis.call('INCR', KEYS[1])\n"
+            . "local ttl = tonumber(ARGV[1])\n"
+            . "if count == 1 and ttl > 0 then\n"
+            . "    redis.call('EXPIRE', KEYS[1], ttl)\n"
+            . "end\n"
+            . "return count";
     }
 
     /**
@@ -112,10 +141,10 @@ class RedisLock
      */
     public function addUserLockOrThrow($time = 10)
     {
-        $result = $this->addUserLock($time);
-        if ($result !== 1) {
-            throw new LockException("Lock Fail: $this->userId -> $this->lockName");
+        $attempt = $this->attemptUserLock($time);
+        if (!$attempt->isAcquired()) {
+            throw LockException::forRejected($this->userId, $this->lockName, $attempt->count());
         }
-        return $result;
+        return $attempt->count();
     }
 }
