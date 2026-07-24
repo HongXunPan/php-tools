@@ -16,7 +16,7 @@
     ],
     "require": {
         "php": ">=5.6",
-        "hongxunpan/db": "1.0.2",
+        "hongxunpan/db": "^1.0 || ^2.0",
         "wangju/ding-notice": "^1.0",
         "elasticsearch/elasticsearch": "^8.8"
     },
@@ -30,7 +30,7 @@
         "hxpSetEnvPath": "@php scripts/env/setConfigPath.php ",
         "hxpGetEnvInitCode": "@php scripts/env/getConfigInitCode.php"
     },
-    "scripte-descriptions": {
+    "scripts-descriptions": {
         "test": "composer run-script --working-dir=vendor/hongxunpan/php-tools hxpGetEnvInitCode",
         "hxpSetConfigPath": "set Config-config, param is configPath,cachePath,canCache "
     }
