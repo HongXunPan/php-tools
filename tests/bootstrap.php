@@ -109,7 +109,16 @@ final class FakeRedisClient
         return $exists ? 1 : 0;
     }
 
-    public function eval($script, array $arguments, $numberOfKeys)
+    public function __call($name, $arguments)
+    {
+        if ($name !== 'eval' || count($arguments) !== 3) {
+            throw new BadMethodCallException('不支持的 Redis 测试方法：' . $name);
+        }
+
+        return $this->evaluateScript($arguments[0], $arguments[1], $arguments[2]);
+    }
+
+    private function evaluateScript($script, array $arguments, $numberOfKeys)
     {
         if (strpos($script, 'HEXISTS') !== false) {
             return $this->claim($arguments, $numberOfKeys);

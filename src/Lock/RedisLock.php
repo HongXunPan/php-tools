@@ -3,7 +3,6 @@
 namespace HongXunPan\Tools\Lock;
 
 use HongXunPan\DB\Redis\Redis;
-use HongXunPan\Tools\Validate\Validator;
 
 class RedisLock
 {
@@ -43,7 +42,9 @@ class RedisLock
             'maxTimes' => 5,
         ];
         $lockConfig = array_merge($default, $lockConfig);
-        Validator::validateOrThrow($lockConfig, ['userId' => 'required']);
+        if (!array_key_exists('userId', $lockConfig) || $lockConfig['userId'] === null) {
+            throw new \InvalidArgumentException('userId is required');
+        }
 
         $lock = new static(
             $lockConfig['userId'],

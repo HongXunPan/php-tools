@@ -49,6 +49,16 @@ function testRedisLockRepairs()
 
     assertThrows(
         'InvalidArgumentException',
+        function () {
+            RedisLock::withUserLock([], function () {
+                return null;
+            });
+        },
+        '缺少 userId 时必须失败'
+    );
+
+    assertThrows(
+        'InvalidArgumentException',
         function () use ($redis) {
             (new RedisLock('user-3', 'lock', $redis))->attemptUserLock(0);
         },

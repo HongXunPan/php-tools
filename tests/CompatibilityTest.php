@@ -23,10 +23,56 @@ function testRemovedCapabilities()
         'HongXunPan\\Tools\\Event\\Event',
         'HongXunPan\\Tools\\Event\\EventDispatcher',
         'HongXunPan\\Tools\\Event\\EventSubscriber',
+        'HongXunPan\\Tools\\Validate\\Validator',
     ];
 
     foreach ($removedClasses as $removedClass) {
         assertTrueValue(!class_exists($removedClass) && !trait_exists($removedClass), '已移除能力仍可被加载：' . $removedClass);
+    }
+}
+
+function testPhp56ReservedMethodDeclarations()
+{
+    $roots = [dirname(__DIR__) . '/src', __DIR__];
+    $reservedNames = ['array', 'eval'];
+
+    foreach ($roots as $root) {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($files as $file) {
+            if (!$file->isFile() || strtolower($file->getExtension()) !== 'php') {
+                continue;
+            }
+
+            $expectFunctionName = false;
+            foreach (token_get_all(file_get_contents($file->getPathname())) as $token) {
+                if (is_array($token) && $token[0] === T_FUNCTION) {
+                    $expectFunctionName = true;
+                    continue;
+                }
+                if (!$expectFunctionName) {
+                    continue;
+                }
+                if (is_array($token) && $token[0] === T_WHITESPACE) {
+                    continue;
+                }
+                if ($token === '&') {
+                    continue;
+                }
+                if ($token === '(') {
+                    $expectFunctionName = false;
+                    continue;
+                }
+
+                $functionName = is_array($token) ? strtolower($token[1]) : strtolower($token);
+                assertTrueValue(
+                    !in_array($functionName, $reservedNames, true),
+                    '发现 PHP 5.6 保留方法名：' . $functionName . ' @ ' . $file->getPathname()
+                );
+                $expectFunctionName = false;
+            }
+        }
     }
 }
 
@@ -76,6 +122,7 @@ function testOpenSslCompatibility()
 
 return [
     '已移除能力不可加载' => 'testRemovedCapabilities',
+    'PHP 5.6 保留方法名扫描' => 'testPhp56ReservedMethodDeclarations',
     'PSR 日志兼容' => 'testLogPsrCompatibility',
     'OpenSSL 加解密兼容' => 'testOpenSslCompatibility',
 ];

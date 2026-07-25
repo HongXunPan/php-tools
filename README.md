@@ -22,7 +22,6 @@ composer require hongxunpan/php-tools
 - [RedisLock](readme/redis-lock.md)：Redis 分布式独占锁；
 - [RedisDraw](readme/redis-draw.md)：Redis 抽奖；
 - [RedisTimeLimitOffers](readme/redis-time-limit-offers.md)：Redis 限量名额；
-- [Validator](readme/validate-validator.md)：轻量数据验证；
 - [OpensslEncrypt](readme/openssl-encrypt.md)：兼容历史密文的 OpenSSL 加解密；
 - [GetDirFiles](readme/get-dir-files.md)：目录扫描；
 - [Progress](readme/cli-progress.md)：CLI 进度显示与下载进度。
@@ -35,8 +34,9 @@ composer require hongxunpan/php-tools
 - 移除无完整实现或无稳定契约的 `QueryBuilder`、`ModelUtils`、`EnumException`、`SSETrait`；
 - 移除未形成可用能力的 ServerMonitor、ServerProbe、RateLimit、ValueShare 等空壳；
 - 移除已归 simple-framework core 的 Config / Env，以及已由 simple-event 承接的历史 Event 草稿；
+- 移除已由独立包 `hongxunpan/validator` 承接的旧 Validator；
 - 保留 `OpensslEncrypt` 的历史默认行为和密文格式，但新项目必须显式配置密钥与 IV；
-- 修复 Redis 缓存返回值、目录扫描、树转换、验证器等实际逻辑错误；
+- 修复 Redis 缓存返回值、目录扫描、树转换等实际逻辑错误；
 - 限量名额改为 Lua 原子领取，避免并发超发。
 
 升级前应先搜索项目对已移除类的直接引用；旧项目可继续锁定 2.x，新项目与完成迁移的项目再接入 3.x。

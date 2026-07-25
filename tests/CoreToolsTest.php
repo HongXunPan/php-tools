@@ -6,25 +6,6 @@ use HongXunPan\Tools\File\GetDirFiles;
 use HongXunPan\Tools\Performance\Performance;
 use HongXunPan\Tools\TreeAndList\List2Tree;
 use HongXunPan\Tools\TreeAndList\Tree2List;
-use HongXunPan\Tools\Validate\Validator;
-
-function testValidatorRepairs()
-{
-    $result = Validator::validate(
-        ['status' => 'invalid', 'nullable' => null],
-        ['status' => 'required|in:["enabled"]', 'nullable' => 'notnull']
-    );
-
-    assertSameValue(2, $result['count'], '校验错误数量不正确');
-    assertTrueValue(!isset($result['validated_data']['status']), '后续规则失败的字段不应进入 validated_data');
-    assertTrueValue(!isset($result['validated_data']['nullable']), '空值字段不应进入 validated_data');
-
-    $timeResult = Validator::validate(
-        ['created_at' => '2026-07-25 12:30:00'],
-        ['created_at' => 'timeFormat:Y-m-d H:i:s']
-    );
-    assertSameValue(0, $timeResult['count'], '包含冒号的规则参数解析失败');
-}
 
 function testFileScanner()
 {
@@ -110,7 +91,6 @@ function testProgressBoundary()
 }
 
 return [
-    'Validator 逻辑修复' => 'testValidatorRepairs',
     '目录扫描' => 'testFileScanner',
     '树与列表转换' => 'testTreeConversion',
     '回溯与性能计算' => 'testBacktraceAndPerformance',
