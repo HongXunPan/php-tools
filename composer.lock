@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "523120db2aeb461b38fb816cef4422dd",
+    "content-hash": "9ac0af1c02f46258707706c6e5d79f4d",
     "packages": [
         {
             "name": "hongxunpan/db",

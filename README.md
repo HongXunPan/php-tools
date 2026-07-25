@@ -26,7 +26,7 @@ composer require hongxunpan/php-tools
 - [GetDirFiles](readme/get-dir-files.md)：目录扫描；
 - [Progress](readme/cli-progress.md)：CLI 进度显示与下载进度。
 
-## 3.0 变更边界（待发布）
+## 3.0 变更边界
 
 3.0 是破坏性清理版本：
 
@@ -53,7 +53,7 @@ PHP 5.6 语法与运行兼容性由 GitHub Actions 承担，本地开发环境�
 
 ## 更新记录
 
-- `3.0.0` 待发布：PHP 5.6 兼容回退、废弃能力清理、核心逻辑修复与兼容矩阵；
+- `3.0.0` 2026-07-25：PHP 5.6 兼容回退、废弃能力清理、核心逻辑修复与兼容矩阵；
 - `2.8.0` 2024-05-24：Performance；
 - `2.7.0` 2024-05-24：SSE supporter；
 - `2.6.0` 2024-03-06：OpensslEncrypt；
