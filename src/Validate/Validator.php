@@ -73,12 +73,13 @@ class Validator
         $validatedData = [];
         if (!empty($options)) {
             foreach ($options as $param => $rules) {
-                @list($param, $paramName) = explode(':', $param);
-                $paramName = isset($paramName) ? $paramName : $param;
+                $paramParts = explode(':', $param, 2);
+                $param = $paramParts[0];
+                $paramName = isset($paramParts[1]) ? $paramParts[1] : $param;
                 $rules = explode('|', $rules);
 
                 $value = null;
-                if (isset($data[$param])) {
+                if (array_key_exists($param, $data)) {
                     $value = $data[$param];
                 } else { //值不存在
                     if (in_array('required', $rules)) {
@@ -87,8 +88,9 @@ class Validator
                         continue;
                     }
                 }
+                $fieldValid = true;
                 foreach ($rules as $rule) {
-                    $rule = explode(':', $rule);
+                    $rule = explode(':', $rule, 2);
                     $ruleKey = $rule[0];
                     $ruleValue = '';
                     if (count($rule) > 1) {
@@ -96,6 +98,7 @@ class Validator
                     }
                     $methodExist = method_exists($static, $ruleKey);
                     if (!$methodExist) {
+                        $fieldValid = false;
                         $errorCount++;
                         $errorMsg = "$paramName rule: $ruleKey does not support, please check or request PR";
                         $message[] = $errorMsg;
@@ -110,6 +113,7 @@ class Validator
                     }
                     $validateResult = $static->$ruleKey($value, $ruleValue);
                     if (!$validateResult) {//验证不通过 记录错误信息
+                        $fieldValid = false;
                         $errorCount++;
                         $errorMsg = str_replace('$paramName', $paramName, $static->allValidateType[$ruleKey]);
                         $errorMsg = str_replace('$rule', $ruleValue, $errorMsg);
@@ -121,9 +125,10 @@ class Validator
                             'rule_value' => $ruleValue,
                             'reason' => "result: " . json_encode($validateResult),
                         ];
-                    } else {
-                        $validatedData[$param] = $value;
                     }
+                }
+                if ($fieldValid) {
+                    $validatedData[$param] = $value;
                 }
             }
         }
@@ -176,12 +181,21 @@ class Validator
 
     protected function in($value, $expect)
     {
-        return in_array($value, json_decode($expect, true));
+        $options = json_decode($expect, true);
+
+        return is_array($options) && in_array($value, $options);
     }
 
     protected function notnull($value)
     {
-        return !($value === null || trim($value) === '');
+        if ($value === null) {
+            return false;
+        }
+        if (is_string($value)) {
+            return trim($value) !== '';
+        }
+
+        return true;
     }
 
     protected function int($value)
@@ -202,19 +216,23 @@ class Validator
 
     protected function len($value, $expect)
     {
-        list($min, $max) = explode('-', $expect);
-        $len = iconv_strlen($value);
+        $range = explode('-', $expect, 2);
+        if (count($range) !== 2) {
+            return false;
+        }
+        list($min, $max) = $range;
+        $len = $this->stringLength($value);
         return $len >= $min && $len <= $max;
     }
 
     protected function lenMin($value, $expect)
     {
-        return iconv_strlen($value) > $expect;
+        return $this->stringLength($value) > $expect;
     }
 
     protected function lenMax($value, $expect)
     {
-        return iconv_strlen($value) < $expect;
+        return $this->stringLength($value) < $expect;
     }
 
     protected function time($value)
@@ -225,5 +243,17 @@ class Validator
     protected function timeFormat($value, $expect)
     {
         return strtotime($value) !== false && date($expect, strtotime($value)) === $value;
+    }
+
+    private function stringLength($value)
+    {
+        if (!is_string($value)) {
+            return 0;
+        }
+        if (function_exists('iconv_strlen')) {
+            return iconv_strlen($value);
+        }
+
+        return strlen($value);
     }
 }

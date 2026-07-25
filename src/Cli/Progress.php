@@ -13,7 +13,7 @@ class Progress
 
     private static function setPhpMode()
     {
-        if (!isset(self::$phpMode) && self::$phpMode === null) {
+        if (self::$phpMode === null) {
             self::$phpMode = php_sapi_name();
         }
     }
@@ -41,63 +41,29 @@ class Progress
         self::checkPhpMode();
         static $lastTime = 0;
         $now = microtime(true);
-        if ($current == 0) {
-            $percent = 0;
+        if (!is_numeric($total) || $total <= 0) {
+            $percent = 0.0;
         } else {
-            $percent = (int)ceil($current / $total * 100);
+            $percent = (float)$current / (float)$total * 100;
         }
-        if ($lastTime != 0 && $now - $lastTime < 0.1 && $percent < 90) {
+        $percent = max(0, min(100, $percent));
+        $renderPercent = (int)ceil($percent);
+        if ($lastTime != 0 && $now - $lastTime < 0.1 && $renderPercent < 90) {
             return;
         }
         $lastTime = $now;
         $process = "[";
-        $process .= str_repeat('#', $percent);
-        $process .= str_repeat(' ', 100 - $percent);
+        $process .= str_repeat('#', $renderPercent);
+        $process .= str_repeat(' ', 100 - $renderPercent);
         $process .= "]";
         if ($showDetail) {
             $process .= " [$current/$total$detailUnit]";
         }
         if ($showPercent) {
-            if ($percent == 0) {
-                $percent = "0%";
-            } else {
-                $percent = number_format($current / $total * 100, 2) . "%";
-            }
-            $process .= " [$percent]";
+            $process .= " [" . number_format($percent, 2) . "%]";
         }
         echo "\033[?25l";//隐藏光标
         echo $process . "\r";
-    }
-
-    /** @deprecated some bug in docker or MacOs
-     */
-    public static function echoCliProgressOld($current, $total, $showDetail = true, $showPercent = true)
-    {
-        self::checkPhpMode();
-        static $lastTime = 0;
-        $now = microtime(true);
-        $percent = (int)ceil($current / $total * 100);
-        if ($lastTime != 0 && $now - $lastTime < 0.1 && $percent < 90) {
-            return;
-        }
-        $lastTime = $now;
-        echo "\033[?25l";//隐藏光标
-        $process = "[";
-        $process .= str_repeat('#', $percent);
-        $process .= str_repeat(' ', 100 - $percent);
-        $process .= "]";
-        if ($showDetail) {
-            $process .= " [$current/$total]";
-        }
-        if ($showPercent) {
-            $percent = number_format($current / $total * 100, 2) . "%";
-            $process .= " [$percent]";
-        }
-        echo "\33[s"; //保存光标位置
-        echo $process;
-        echo "\33[K"; //清除光标之后的内容
-        echo "\33[u"; //恢复光标位置
-//        echo "\33[?25h"; //显示光标
     }
 
     public static function endCliProgress()
@@ -171,13 +137,22 @@ class Progress
             $urlFileName = ltrim($urlFileName, '/');
             $saveName = $urlFileName;
         }
-        $saveFile = $savePath . $saveName;
+        $saveFile = rtrim($savePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $saveName;
         if (file_exists($saveFile)) {
             //文件已存在
-            $saveFile = $savePath . date('YmdHis') . '-' . md5(microtime()) . $saveName;
+            $saveFile = rtrim($savePath, DIRECTORY_SEPARATOR)
+                . DIRECTORY_SEPARATOR
+                . date('YmdHis')
+                . '-'
+                . md5(microtime())
+                . '-'
+                . $saveName;
         }
 
         $fp = fopen($saveFile, 'wb'); // 本地文件保存路径
+        if ($fp === false) {
+            return false;
+        }
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_NOPROGRESS, !$isShowProgress);
@@ -192,10 +167,15 @@ class Progress
         );
 
         echo "Downloading \033[1;31m" . $url . "\033[0m to \033[1;32m$saveFile\033[0m \n";
-        curl_exec($ch);
+        $downloaded = curl_exec($ch);
         curl_close($ch);
         fclose($fp);
         self::endCliProgress();
+        if ($downloaded === false) {
+            @unlink($saveFile);
+            return false;
+        }
+
         return $saveFile;
     }
 }

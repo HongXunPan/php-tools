@@ -23,7 +23,7 @@ class RedisTimeLimitOffers
         $this->redisKeyCount = 'TimeLimitOffers:Count:' . $roundName;
         $this->redisKeyUsers = 'TimeLimitOffers:User:' . $roundName;
         $this->limits = $limit;
-        if (!$redis instanceof Redis) {
+        if ($redis === null) {
             $redis = HongXunPanRedis::connection();
         }
         $this->redis = $redis;
@@ -38,48 +38,55 @@ class RedisTimeLimitOffers
      */
     public function isHaveChance()
     {
-        if ($this->redis->hExists($this->redisKeyUsers, $this->userId)) {
-            //已经抢到过名额,在用户池里
-            return true;
+        $result = $this->redis->eval(
+            $this->claimLuaScript(),
+            [
+                $this->redisKeyCount,
+                $this->redisKeyUsers,
+                (string)$this->userId,
+                (int)$this->limits,
+                date('Ymd H:i:s'),
+            ],
+            2
+        );
+
+        if (!is_array($result) || count($result) < 2) {
+            throw new TimeLimitOffersException(
+                TimeLimitOffersException::OUT_OF_LIMIT,
+                '抢购名额 Redis 返回结果无效'
+            );
         }
-        $count = $this->redis->get($this->redisKeyCount);//用户总数
-        if ($count === false) {
-            $count = 0;
-        }
-        if ($count >= $this->limits) {
+
+        if ((int)$result[0] !== 1) {
             throw new TimeLimitOffersException(
                 TimeLimitOffersException::NO_CHANCE_LEFT,
                 json_encode(
                     [
                         'userId' => $this->userId,
                         'roundName' => $this->roundName,
-                        'nowCount' => $count, 'limits' => $this->limits
+                        'nowCount' => (int)$result[1],
+                        'limits' => $this->limits,
                     ]
                 )
             );
-//            return false;
         }
-        $newCount = $this->redis->incr($this->redisKeyCount);
-        if ($newCount > $this->limits) {
-            //超卖
-//            oo::logs()->positionLog('超卖,newCount='.$newCount.',time='.$time, 'isHaveChance');
-            throw new TimeLimitOffersException(
-                TimeLimitOffersException::OUT_OF_LIMIT,
-                json_encode(
-                    [
-                        'userId' => $this->userId,
-                        'roundName' => $this->roundName,
-                        'newCount' => $newCount,
-                        'limits' => $this->limits
-                    ]
-                )
-            );
-//            return false;
-        }
-        //将用户添加到用户池
-        $this->redis->hSet($this->redisKeyUsers, $this->userId, date('Ymd H:i:s'));
 
         return true;
+    }
+
+    private function claimLuaScript()
+    {
+        return "if redis.call('HEXISTS', KEYS[2], ARGV[1]) == 1 then\n"
+            . "    return {1, tonumber(redis.call('GET', KEYS[1]) or '0')}\n"
+            . "end\n"
+            . "local count = tonumber(redis.call('GET', KEYS[1]) or '0')\n"
+            . "local limits = tonumber(ARGV[2])\n"
+            . "if count >= limits then\n"
+            . "    return {0, count}\n"
+            . "end\n"
+            . "local newCount = redis.call('INCR', KEYS[1])\n"
+            . "redis.call('HSET', KEYS[2], ARGV[1], ARGV[3])\n"
+            . "return {1, newCount}";
     }
 
     public function expire($ttl = 30 * 60)

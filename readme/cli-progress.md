@@ -44,7 +44,7 @@ for ($i = 1; $i <= $count; $i++) {
 - 直接下载
 
 ```php
-$result =  (new \HongXunPan\Tools\Cli\Progress())->curlDownloadProgress($url, $savePath, $saveName = '', $unit = 'kb', );
+$result =  (new \HongXunPan\Tools\Cli\Progress())->curlDownloadProgress($url, $savePath, $saveName = '', $unit = 'kb');
 var_dump($result);
 ```
 

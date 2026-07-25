@@ -1,0 +1,52 @@
+name: PHP 兼容性
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    name: PHP ${{ matrix.php }} / Composer ${{ matrix.composer }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '5.6'
+            composer: '2.2'
+          - php: '7.4'
+            composer: 'v2'
+          - php: '8.0'
+            composer: 'v2'
+          - php: '8.5'
+            composer: 'v2'
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 PHP 与 Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: openssl, iconv
+          coverage: none
+          tools: composer:${{ matrix.composer }}
+        env:
+          fail-fast: true
+
+      - name: 校验 Composer 配置
+        run: composer validate --strict --no-interaction
+
+      - name: 安装依赖
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: 检查 PHP 语法
+        run: composer lint --no-interaction
+
+      - name: 运行回归测试
+        run: composer test --no-interaction

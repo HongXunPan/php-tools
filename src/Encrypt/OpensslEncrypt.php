@@ -7,8 +7,10 @@ use RuntimeException;
 
 /**
  *
- * @method static bool encrypt(string $str, string $algo)
- * @method static bool decrypt($data, $algo)
+ * @method static string|false encrypt($str, $algo = self::AES_256_CBC)
+ * @method static string|false decrypt($data, $algo = self::AES_256_CBC)
+ * @method static string|false encryptFixedLengthWithNonceTag($str, $algo = self::AES_256_GCM)
+ * @method static string|false decryptFixedLengthWithNonceTag($data, $algo = self::AES_256_GCM)
  */
 class OpensslEncrypt
 {
@@ -70,10 +72,23 @@ class OpensslEncrypt
     public static function __callStatic($name, $arguments)
     {
         $static = new static();
-        if (method_exists($static, $name)) {
-            return $static->$name(...$arguments);
+
+        return $static->__call($name, $arguments);
+    }
+
+    public function __call($name, $arguments)
+    {
+        $methods = [
+            'encrypt',
+            'decrypt',
+            'encryptFixedLengthWithNonceTag',
+            'decryptFixedLengthWithNonceTag',
+        ];
+        if (!in_array($name, $methods, true)) {
+            throw new EncryptException('method no exists:' . $name);
         }
-        throw new EncryptException('method no exists:' . $name);
+
+        return call_user_func_array([$this, $name], $arguments);
     }
 
     /**
@@ -91,12 +106,12 @@ class OpensslEncrypt
      * @param string $algo
      * @return bool|string
      */
-    public function encrypt($str, $algo = self::AES_256_CBC)
+    protected function encrypt($str, $algo = self::AES_256_CBC)
     {
         if (empty($str)) {
             return '';
         }
-        if (!in_array($algo, self::$algo)) {
+        if (!in_array($algo, self::$algo, true)) {
             return false;
         }
         return openssl_encrypt($str, $algo, $this->secretKey, 0, $this->iv);
@@ -108,12 +123,12 @@ class OpensslEncrypt
      * @param $algo
      * @return bool|string
      */
-    public function decrypt($data, $algo = self::AES_256_CBC)
+    protected function decrypt($data, $algo = self::AES_256_CBC)
     {
         if (empty($data)) {
             return '';
         }
-        if (!in_array($algo, self::$algo)) {
+        if (!in_array($algo, self::$algo, true)) {
             return false;
         }
         return openssl_decrypt($data, $algo, $this->secretKey, 0, $this->iv);
@@ -126,9 +141,9 @@ class OpensslEncrypt
      * @param string $algo 加密算法（必须是 AEAD 类型）
      * @return string|false 定长密文或 false
      */
-    public function encryptFixedLengthWithNonceTag($str, $algo = self::AES_256_GCM)
+    protected function encryptFixedLengthWithNonceTag($str, $algo = self::AES_256_GCM)
     {
-        if (!in_array($algo, self::SUPPORTED_AEAD_MODES)) {
+        if (!in_array($algo, self::SUPPORTED_AEAD_MODES, true)) {
             throw new InvalidArgumentException("Unsupported AEAD algorithm: {$algo}");
         }
 
@@ -143,17 +158,20 @@ class OpensslEncrypt
         // 计算 payload 长度（向上对齐到块大小）
         $payloadLength = (strlen($str) + $blockSize) & ~($blockSize - 1);
 
-        // 自动计算最终密文长度
-        $fixedLength = $ivLength + $payloadLength + $tagLength;
-
         // 填充并截断至 payloadLength
         $padded = $this->padData($str, $blockSize);
         $padded = substr($padded, 0, $payloadLength);
 
         $nonce = openssl_random_pseudo_bytes($ivLength);
+        if ($nonce === false) {
+            return false;
+        }
         $tag = null;
 
         $cipherText = openssl_encrypt($padded, $algo, $this->secretKey, OPENSSL_RAW_DATA, $nonce, $tag);
+        if ($cipherText === false || !is_string($tag)) {
+            return false;
+        }
 
         return $nonce . $cipherText . $tag; // 返回定长密文
     }
@@ -166,7 +184,14 @@ class OpensslEncrypt
 
     protected function unPadData($data)
     {
+        if (!is_string($data) || $data === '') {
+            return false;
+        }
         $length = ord($data[strlen($data) - 1]);
+        if ($length < 1 || $length > strlen($data)) {
+            return false;
+        }
+
         return substr($data, 0, -$length);
     }
 
@@ -177,9 +202,9 @@ class OpensslEncrypt
      * @param string $algo 加密算法
      * @return string|false 明文或失败返回 false
      */
-    public function decryptFixedLengthWithNonceTag($cipherText, $algo = self::AES_256_GCM)
+    protected function decryptFixedLengthWithNonceTag($cipherText, $algo = self::AES_256_GCM)
     {
-        if (!in_array($algo, self::SUPPORTED_AEAD_MODES)) {
+        if (!in_array($algo, self::SUPPORTED_AEAD_MODES, true)) {
             throw new InvalidArgumentException("Unsupported AEAD algorithm: {$algo}");
         }
 

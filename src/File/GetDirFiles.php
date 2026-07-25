@@ -18,35 +18,87 @@ class GetDirFiles
         if (!file_exists($path)) {
             throw new Exception('path:' . $path . 'does not exists');
         }
-        static $currentDepth = 1;
-        $file = [
-            'name' => '',
-            'type' => 0,
-            'children' => [],
-            'depth' => $currentDepth,
-        ];
-        if ($currentDepth > $depth && $depth != -1) {
+        if (!in_array($getType, [self::GET_TYPE_ALL, self::GET_TYPE_DIR_ONLY, self::GET_TYPE_FILE_ONLY], true)) {
+            throw new Exception('get type is invalid');
+        }
+        $depth = (int)$depth;
+        if ($depth < -1) {
+            throw new Exception('depth must be -1 or a non-negative int');
+        }
+
+        if (!is_dir($path) || is_link($path)) {
+            if ($getType === self::GET_TYPE_DIR_ONLY) {
+                return [];
+            }
+
+            return self::buildItem($path, $returnFullPath, self::TYPE_FILE, 1, []);
+        }
+
+        return self::scanDirectory($path, $returnFullPath, $getType, $depth, 1);
+    }
+
+    private static function scanDirectory($path, $returnFullPath, $getType, $depth, $currentDepth)
+    {
+        if ($depth !== -1 && $currentDepth > $depth) {
             return [];
         }
-        if (!is_dir($path)) {
-            $pathInfo = pathinfo($path);
-            $file['name'] = $returnFullPath ? $pathInfo['dirname'] . DIRECTORY_SEPARATOR . $pathInfo['basename'] : $pathInfo['basename'];
-            $file['type'] = self::TYPE_FILE;
-            return $file;
-        } else {
-            $childrenPath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '*';
-            $children = glob($childrenPath);
-            $return = [];
-            foreach ($children as $child) {
-                $pathInfo = pathinfo($child);
-                $file['name'] = $returnFullPath ? $pathInfo['dirname'] . DIRECTORY_SEPARATOR . $pathInfo['basename'] : $pathInfo['basename'];
-                $file['type'] = is_dir($file['name']) ? self::TYPE_DIR : self::TYPE_FILE;
-                $currentDepth++;
-                $file['children'] = self::getFilesByPath($child, $returnFullPath, $getType, $depth);
-                $currentDepth--;
-                $return[] = $file;
-            }
-            return $return;
+
+        $entries = scandir($path);
+        if ($entries === false) {
+            throw new Exception('path:' . $path . 'can not be scanned');
         }
+
+        $result = [];
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+
+            $childPath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $entry;
+            $isDirectory = is_dir($childPath) && !is_link($childPath);
+            if ($isDirectory) {
+                $children = self::scanDirectory(
+                    $childPath,
+                    $returnFullPath,
+                    $getType,
+                    $depth,
+                    $currentDepth + 1
+                );
+                if ($getType === self::GET_TYPE_FILE_ONLY) {
+                    $result = array_merge($result, $children);
+                    continue;
+                }
+                $result[] = self::buildItem(
+                    $childPath,
+                    $returnFullPath,
+                    self::TYPE_DIR,
+                    $currentDepth,
+                    $children
+                );
+                continue;
+            }
+
+            if ($getType !== self::GET_TYPE_DIR_ONLY) {
+                $result[] = self::buildItem(
+                    $childPath,
+                    $returnFullPath,
+                    self::TYPE_FILE,
+                    $currentDepth,
+                    []
+                );
+            }
+        }
+
+        return $result;
+    }
+
+    private static function buildItem($path, $returnFullPath, $type, $depth, array $children)
+    {
+        return [
+            'name' => $returnFullPath ? $path : basename($path),
+            'type' => $type,
+            'children' => $children,
+            'depth' => $depth,
+        ];
     }
 }

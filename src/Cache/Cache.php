@@ -38,12 +38,12 @@ class Cache
     public function setConfig($prefix = 'cache:', $redis = null)
     {
         $this->prefix = $prefix;
-        if ($redis instanceof \Redis) {
+        if ($redis !== null) {
             $this->redis = $redis;
         } else {
             $this->redis = Redis::connection();
         }
-        return static::getInstance();
+        return $this;
     }
 
     private $getCache = true;
@@ -51,7 +51,7 @@ class Cache
     public function setCacheMode($getCache = true)
     {
         $this->getCache = $getCache;
-        return static::getInstance();
+        return $this;
     }
 
     public static function remember($redisKey, $ttl, callable $function)
@@ -62,7 +62,7 @@ class Cache
         }
         $res = $function();
         static::set($redisKey, $res, $ttl);
-        return $cache;
+        return $res;
     }
 
     public static function get($redisKey)
@@ -79,6 +79,10 @@ class Cache
     {
         $instance = static::getInstance();
         $redisKey = $instance->prefix . $redisKey;
-        $instance->redis->set($redisKey, $data);
+        if ((int)$ttl > 0) {
+            return $instance->redis->setex($redisKey, (int)$ttl, $data);
+        }
+
+        return $instance->redis->set($redisKey, $data);
     }
 }

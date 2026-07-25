@@ -19,10 +19,10 @@ class RedisLock
     public function __construct($userId, $lockName = 'lock', $redis = null, $maxTimes = 5)
     {
         $this->userId = $userId;
-        $this->lockName = $lockName;
+        $this->lockName = $lockName ?: 'lock';
         $this->redisKey = $this->lockName . ':' . $this->userId;
         $this->maxTimes = $maxTimes;
-        if ($redis instanceof \Redis) {
+        if ($redis !== null) {
             $this->redis = $redis;
         } else {
             $this->redis = Redis::connection();
@@ -37,18 +37,19 @@ class RedisLock
     public static function withUserLock(array $lockConfig, callable $onAcquired, $onRejected = null)
     {
         $default = [
-//            'userId' => ,
-            'lockName' => null,
+            'lockName' => 'lock',
             'redis' => null,
             'time' => 10,
+            'maxTimes' => 5,
         ];
         $lockConfig = array_merge($default, $lockConfig);
         Validator::validateOrThrow($lockConfig, ['userId' => 'required']);
 
         $lock = new static(
             $lockConfig['userId'],
-            $lockConfig['lockName'] ?: null,
-            $lockConfig['redis'] ?: null
+            $lockConfig['lockName'],
+            $lockConfig['redis'],
+            $lockConfig['maxTimes']
         );
 
         $attempt = $lock->attemptUserLock($lockConfig['time']);
@@ -90,8 +91,12 @@ class RedisLock
         if (empty($this->userId)) {
             return new RedisLockAttemptResult(0);
         }
+        $time = (int)$time;
+        if ($time <= 0) {
+            throw new \InvalidArgumentException('lock ttl must be greater than zero');
+        }
 
-        $count = $this->incrementLockTimesAtomically((int)$time);
+        $count = $this->incrementLockTimesAtomically($time);
         /** @noinspection PhpStatementHasEmptyBodyInspection */
         if ($count >= $this->maxTimes) {
             //一定时间内发多个请求 超过最大限制

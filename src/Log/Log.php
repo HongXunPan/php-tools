@@ -10,14 +10,13 @@ class Log extends SingletonAbstract implements LoggerInterface
 {
     use LoggerTrait;
 
-    protected $channel = [];
-    private $fileName = '';
+    protected $channel = '';
     private $logPath = __DIR__ . '/../../../logs';
 
     public function setLogPath($logPath)
     {
-        if (!is_dir($logPath)) {
-            mkdir($logPath, 0777, true);
+        if (!is_dir($logPath) && !@mkdir($logPath, 0777, true) && !is_dir($logPath)) {
+            throw new \Exception("log path can not be created");
         }
         if (!is_writable($logPath)) {
             throw new \Exception("log path is not writable");
@@ -62,13 +61,14 @@ class Log extends SingletonAbstract implements LoggerInterface
         $time = date('Y-m-d H:i:s', $now);
         $day = date('Y-m-d', $now);
         $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-        $log = "[" . strtoupper($level) . "] " . $time . ' - ' . posix_getpid() . ' - ' . $ip;
+        $log = "[" . strtoupper($level) . "] " . $time . ' - ' . getmypid() . ' - ' . $ip;
         if (php_sapi_name() != 'cli') {
-            $uri = $_SERVER['REQUEST_URI'];
-            $host = $_SERVER['HTTP_HOST'];
-            $http = $_SERVER['REQUEST_SCHEME'];
+            $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+            $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+            $http = isset($_SERVER['REQUEST_SCHEME']) ? $_SERVER['REQUEST_SCHEME'] : 'http';
+            $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
             $url = $http . '://' . $host . $uri;
-            $log .= ' - [' . $_SERVER['REQUEST_METHOD'] . '] - ' . $url;
+            $log .= ' - [' . $method . '] - ' . $url;
         }
         if ($msg) {
             $log .= PHP_EOL . $msg;
@@ -81,11 +81,7 @@ class Log extends SingletonAbstract implements LoggerInterface
         @file_put_contents($this->logPath . $fileName, $log, FILE_APPEND);
     }
 
-    /** @noinspection PhpElementIsNotAvailableInCurrentPhpVersionInspection
-     * @noinspection PhpUndefinedClassInspection
-     * @noinspection PhpLanguageLevelInspection
-     */
-    public function log($level, string|\Stringable $message, array $context = []): void
+    public function log($level, $message, array $context = [])
     {
         $this->write($level, $message, $context);
     }

@@ -1,43 +1,63 @@
-## php 工具包
+# PHP 工具包
 
-### install 
+`hongxunpan/php-tools` 提供不依赖业务容器的通用 PHP 工具。3.0 线以 **PHP 5.6 可安装、PHP 8.x 可运行** 为兼容边界。
 
-`composer require hongxunpan/php-tools`
+## 安装
 
-### usage
+```bash
+composer require hongxunpan/php-tools
+```
 
-- [cli/Progress](readme/cli-progress.md) cli 终端下的任务进度显示
-- [validate/Validator](readme/validate-validator.md) 验证器
-- [lock/RedisLock](readme/redis-lock.md) redis 分布独占锁（推荐使用 `attemptUserLock()` / `withUserLock()`）
-- [draw/RedisDraw](readme/redis-draw.md) redis 抽奖
-- [timeLimitOffers/RedisTimeLimitOffers](readme/redis-time-limit-offers.md) redis 抢购名额
-- [notice/DingTalk] 钉钉消息推送
-- [file/GetDirFiles](readme/get-dir-files.md) 扫描文件夹下的文件
+## 运行要求
 
-### update-log
+- PHP `>=5.6`；
+- 使用日志能力时遵循 PSR-3 1.x 契约；
+- Redis 工具默认可使用 `hongxunpan/db` 的 Redis 连接，也允许注入兼容的 Redis 客户端；
+- GitHub Actions 持续验证 PHP `5.6`、`7.4`、`8.0`、`8.5`。
 
- - `2.8.0` 2024-05-24 Performance
- - `2.7.0` 2024-05-24 Sse supporter
- - `2.6.0` 2024-03-06 OpensslEncrypt
- - `2.5.0` 2024-02-18 cache remember
- - `2.4.2` 2023-09-23 fix framework bugs & add features
- - `2.4.1` 2023-06-30 fix script autoload.php path
- - `2.4.0` 2023-06-30 add Config & Env
- - `2.3.0` 2023-05-19 add get-dir-files
- - `2.2.0` 2023-02-20 add ServerMonitor & notice Interface
- - `2.1.1` 2022-12-20 redis-lock transaction callable  
- - `2.1.0` 2022-10-16 add redis-time-limit-offers  
- - `2.0.0` 2022-10-13 separate out the db-connection  
- - `1.4.0` 2022-10-11 add mysql pdo connect & abstract db connect
- - `1.3.2` 2022-10-08 add function isUserInPool
- - `1.3.1` 2022-10-06 fix high draw bugs
- - `1.3.0` 2022-10-06 add redis-draw
- - `1.2.0` 2022-10-05 add redis && redis-lock
- - `1.1.0` 2022-10-04 add validator
- - `1.0.1` 2022-10-03 add readme doc
- - `1.0.0` 2022-10-03 cli/progress
+## 能力索引
 
-### todo
+- `Log`：轻量文件日志与 PSR-3 Logger；
+- `Cache`：Redis 缓存辅助；
+- [RedisLock](readme/redis-lock.md)：Redis 分布式独占锁；
+- [RedisDraw](readme/redis-draw.md)：Redis 抽奖；
+- [RedisTimeLimitOffers](readme/redis-time-limit-offers.md)：Redis 限量名额；
+- [Validator](readme/validate-validator.md)：轻量数据验证；
+- [OpensslEncrypt](readme/openssl-encrypt.md)：兼容历史密文的 OpenSSL 加解密；
+- [GetDirFiles](readme/get-dir-files.md)：目录扫描；
+- [Progress](readme/cli-progress.md)：CLI 进度显示与下载进度。
 
-- Monolog
-- Server Ping/Pong
+## 3.0 变更边界（待发布）
+
+3.0 是破坏性清理版本：
+
+- 移除 ElasticSearch、DingTalk，避免通用工具包携带重型或业务渠道依赖；
+- 移除无完整实现或无稳定契约的 `QueryBuilder`、`ModelUtils`、`EnumException`、`SSETrait`；
+- 移除未形成可用能力的 ServerMonitor、ServerProbe、RateLimit、ValueShare 等空壳；
+- 移除已归 simple-framework core 的 Config / Env，以及已由 simple-event 承接的历史 Event 草稿；
+- 保留 `OpensslEncrypt` 的历史默认行为和密文格式，但新项目必须显式配置密钥与 IV；
+- 修复 Redis 缓存返回值、目录扫描、树转换、验证器等实际逻辑错误；
+- 限量名额改为 Lua 原子领取，避免并发超发。
+
+升级前应先搜索项目对已移除类的直接引用；旧项目可继续锁定 2.x，新项目与完成迁移的项目再接入 3.x。
+
+## 本地验证
+
+```bash
+composer validate --strict
+composer lint
+composer test
+```
+
+PHP 5.6 语法与运行兼容性由 GitHub Actions 承担，本地开发环境无需额外拉取旧版 PHP 镜像。
+
+## 更新记录
+
+- `3.0.0` 待发布：PHP 5.6 兼容回退、废弃能力清理、核心逻辑修复与兼容矩阵；
+- `2.8.0` 2024-05-24：Performance；
+- `2.7.0` 2024-05-24：SSE supporter；
+- `2.6.0` 2024-03-06：OpensslEncrypt；
+- `2.5.0` 2024-02-18：Cache remember；
+- `2.4.0` 2023-06-30：Config 与 Env；
+- `2.3.0` 2023-05-19：GetDirFiles；
+- `2.0.0` 2022-10-13：拆分数据库连接。

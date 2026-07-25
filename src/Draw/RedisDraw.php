@@ -14,7 +14,7 @@ class RedisDraw
 
     public function __construct($poolName = 'default', $redis = null)
     {
-        if (!$redis instanceof \Redis) {
+        if ($redis === null) {
             $redis = Redis::connection();
         }
         $this->redis = $redis;
@@ -24,12 +24,20 @@ class RedisDraw
 
     public function addUser2Pool(array $userIds)
     {
-        $this->redis->sAddArray($this->redisKey, $userIds);
+        if (!$userIds) {
+            return 0;
+        }
+
+        return $this->redis->sAddArray($this->redisKey, $userIds);
     }
 
     public function removeUserFromPool(array $userIds)
     {
-        $this->redis->sRem($this->redisKey, ...$userIds);
+        if (!$userIds) {
+            return 0;
+        }
+
+        return $this->redis->sRem($this->redisKey, ...$userIds);
     }
 
     /**
@@ -63,9 +71,10 @@ class RedisDraw
      */
     public function draw($count = 1, $canDuplicate = false)
     {
-        if ((int)$count != $count) {
-            throw new Exception('count must be int');
+        if ((int)$count != $count || (int)$count <= 0) {
+            throw new Exception('count must be a positive int');
         }
+        $count = (int)$count;
         //先判断个数
 //        $total = $this->redis->sCard($this->redisKey);
         if ($this->getPoolUserCount() < $count) {
@@ -115,6 +124,11 @@ class RedisDraw
         $canDuplicate = false,
         $redis = null
     ) {
+        if ((int)$highCount != $highCount || (int)$highCount < 0) {
+            throw new Exception('high count must be a non-negative int');
+        }
+        $highCount = (int)$highCount;
+
         $highPool = new self($highPoolName, $redis);
         $normalPool = new self($normalPoolName, $redis);
 

@@ -36,15 +36,31 @@ class BacktraceHelper
      * @param array $ignoredPaths
      * @return array|void
      */
-    public static function getCaller(array $backtrace = null, $ignoredPaths = [])
+    public static function getCaller($backtrace = null, $ignoredPaths = [])
     {
-        $backtrace = $backtrace ?: static::getBacktrace();
+        if ($backtrace === null) {
+            $backtrace = static::getBacktrace();
+        }
+        if (!is_array($backtrace)) {
+            throw new \InvalidArgumentException('backtrace must be array or null');
+        }
         $ignoredPaths = array_merge(static::DEFAULT_IGNORED_PATHS, $ignoredPaths);
 
         foreach ($backtrace as $item) {
-            if (isset($item['file']) && !\HongXunPan\Tools\TreeAndList\str_contains($item['file'], $ignoredPaths)) {
+            if (isset($item['file']) && !static::containsIgnoredPath($item['file'], $ignoredPaths)) {
                 return $item;
             }
         }
+    }
+
+    private static function containsIgnoredPath($file, array $ignoredPaths)
+    {
+        foreach ($ignoredPaths as $ignoredPath) {
+            if ($ignoredPath !== '' && strpos($file, $ignoredPath) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

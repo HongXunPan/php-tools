@@ -10,7 +10,7 @@ class Performance
             'time' => microtime(true),
             'memory' => memory_get_usage(),
             'peak_memory' => memory_get_peak_usage(),
-            'cpu' => getrusage(),
+            'cpu' => function_exists('getrusage') ? getrusage() : [],
             'files' => count(get_included_files()),
         ];
     }
@@ -18,6 +18,9 @@ class Performance
     public static function diffPerformance(array $before, array $after)
     {
         $diff = [];
+        if (isset($after['time'])) {
+            $diff['time'] = $after['time'] - (isset($before['time']) ? $before['time'] : 0);
+        }
         if (isset($after['memory'])) {
             $diff['memory'] = self::bytes2Human($after['memory'] - (isset($before['memory']) ? $before['memory'] : 0));
         }
@@ -27,7 +30,8 @@ class Performance
         if (isset($after['cpu']) && isset($before['cpu'])) {
             $diff['cpu'] = [];
             foreach ($after['cpu'] as $name => $value) {
-                $diff['cpu'][$name] = $value - (isset($before[$name]) ? $before[$name] : 0);
+                $beforeValue = isset($before['cpu'][$name]) ? $before['cpu'][$name] : 0;
+                $diff['cpu'][$name] = $value - $beforeValue;
             }
         }
         if (isset($after['files'])) {

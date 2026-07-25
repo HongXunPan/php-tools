@@ -17,21 +17,20 @@
     "require": {
         "php": ">=5.6",
         "hongxunpan/db": "^1.0 || ^2.0",
-        "wangju/ding-notice": "^1.0",
-        "elasticsearch/elasticsearch": "^8.8"
-    },
-    "require-dev": {
-        "symfony/var-dumper": "^6.0"
+        "psr/log": "^1.1"
     },
     "scripts": {
-        "test": "@php -v",
-        "hxpSetConfigPath": "@php scripts/config/setConfigPath.php ",
-        "hxpGetConfigInitCode": "@php scripts/config/getConfigInitCode.php",
-        "hxpSetEnvPath": "@php scripts/env/setConfigPath.php ",
-        "hxpGetEnvInitCode": "@php scripts/env/getConfigInitCode.php"
+        "lint": "@php tests/lint.php",
+        "test": "@php tests/run.php"
     },
     "scripts-descriptions": {
-        "test": "composer run-script --working-dir=vendor/hongxunpan/php-tools hxpGetEnvInitCode",
-        "hxpSetConfigPath": "set Config-config, param is configPath,cachePath,canCache "
+        "lint": "检查全部 PHP 文件语法",
+        "test": "运行 php-tools 回归测试"
+    },
+    "config": {
+        "platform": {
+            "php": "5.6.0"
+        },
+        "sort-packages": true
     }
 }
