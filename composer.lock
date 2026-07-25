@@ -8,23 +8,20 @@
     "packages": [
         {
             "name": "hongxunpan/db",
-            "version": "1.0.2",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/HongXunPan/db-connection.git",
-                "reference": "1c05ba489caa3de25989144612b240fe4ed098f9"
+                "reference": "4f609d67271585f97d0fa14e39f43e77d6d89f51"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/HongXunPan/db-connection/zipball/1c05ba489caa3de25989144612b240fe4ed098f9",
-                "reference": "1c05ba489caa3de25989144612b240fe4ed098f9",
+                "url": "https://api.github.com/repos/HongXunPan/db-connection/zipball/4f609d67271585f97d0fa14e39f43e77d6d89f51",
+                "reference": "4f609d67271585f97d0fa14e39f43e77d6d89f51",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.6"
-            },
-            "require-dev": {
-                "symfony/var-dumper": "^6.0"
             },
             "type": "library",
             "autoload": {
@@ -45,9 +42,9 @@
             "description": "connections for db, such as mysql & redis ...",
             "support": {
                 "issues": "https://github.com/HongXunPan/db-connection/issues",
-                "source": "https://github.com/HongXunPan/db-connection/tree/1.0.2"
+                "source": "https://github.com/HongXunPan/db-connection/tree/1.1.0"
             },
-            "time": "2022-10-15T07:30:49+00:00"
+            "time": "2026-07-25T09:52:08+00:00"
         },
         {
             "name": "psr/log",
