@@ -83,6 +83,9 @@ function testLogPsrCompatibility()
         $logger = Log::getInstance();
         assertTrueValue($logger instanceof LoggerInterface, 'Log 必须实现 PSR-3 LoggerInterface');
         $logger->setLogPath($directory);
+        $logger->useJsonLines(false);
+        $logger->setContextProvider(null);
+        $logger->setWriteFailureHandler(null);
         $logger->info('基础日志', ['id' => 1]);
         Log::channel('test')->warning('频道日志');
 
@@ -92,6 +95,128 @@ function testLogPsrCompatibility()
     } finally {
         removeTestDirectory($directory);
     }
+}
+
+function testLogJsonLinesAndSharedContext()
+{
+    $directory = makeTestDirectory('log-jsonl');
+    try {
+        $logger = Log::getInstance();
+        $logger->setLogPath($directory);
+        $logger->useJsonLines();
+        $logger->setContextProvider(function () {
+            return [
+                'request_id' => 'request-jsonl',
+                'trace_id' => 'trace-jsonl',
+            ];
+        });
+        $logger->setWriteFailureHandler(null);
+
+        Log::channel('jsonl')->info('结构化日志', ['id' => 7]);
+
+        $file = $directory . DIRECTORY_SEPARATOR . 'jsonl-' . date('Y-m-d') . '.log';
+        assertTrueValue(is_file($file), 'JSONL Channel 日志文件未生成');
+        $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        assertSameValue(1, count($lines), '单条日志必须只占一行');
+        $record = json_decode($lines[0], true);
+        assertTrueValue(is_array($record), 'JSONL 日志无法独立解析');
+        assertSameValue('INFO', $record['level'], 'JSONL 日志级别错误');
+        assertSameValue('jsonl', $record['channel'], 'JSONL Channel 错误');
+        assertSameValue('结构化日志', $record['message'], 'JSONL message 错误');
+        assertSameValue('request-jsonl', $record['request_id'], 'JSONL 缺少请求上下文');
+        assertSameValue('trace-jsonl', $record['trace_id'], 'JSONL 缺少 trace 上下文');
+        assertSameValue(['id' => 7], $record['context'], '调用 context 未原样保留');
+    } finally {
+        $logger = Log::getInstance();
+        $logger->useJsonLines(false);
+        $logger->setContextProvider(null);
+        $logger->setWriteFailureHandler(null);
+        removeTestDirectory($directory);
+    }
+}
+
+function testLogWriteFailureCanBeObserved()
+{
+    $directory = makeTestDirectory('log-write-failure');
+    $failures = [];
+    $logger = Log::getInstance();
+
+    try {
+        $logger->setLogPath($directory);
+        $logger->useJsonLines();
+        $logger->setContextProvider(null);
+        $logger->setWriteFailureHandler(function (array $details) use (&$failures) {
+            $failures[] = $details;
+        });
+        rmdir($directory);
+
+        Log::channel('write-failure')->error('预期写入失败');
+
+        assertSameValue(1, count($failures), '日志写入失败未触发可观测 Handler');
+        assertSameValue('write-failure', $failures[0]['channel'], '失败详情缺少 Channel');
+        assertSameValue('error', $failures[0]['level'], '失败详情缺少日志级别');
+        assertSameValue(null, $failures[0]['written_bytes'], '失败写入字节数错误');
+        assertTrueValue($failures[0]['expected_bytes'] > 0, '失败详情缺少预期写入字节数');
+    } finally {
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+        $logger->setLogPath($directory);
+        $logger->useJsonLines(false);
+        $logger->setContextProvider(null);
+        $logger->setWriteFailureHandler(null);
+        removeTestDirectory($directory);
+    }
+}
+
+function testLogWriteFailureFallsBackToErrorLog()
+{
+    $directory = makeTestDirectory('log-error-fallback');
+    $logDirectory = $directory . DIRECTORY_SEPARATOR . 'logs';
+    $fallbackFile = $directory . DIRECTORY_SEPARATOR . 'php-error.log';
+    $previousErrorLog = ini_get('error_log');
+    $logger = Log::getInstance();
+
+    try {
+        mkdir($logDirectory, 0777, true);
+        $logger->setLogPath($logDirectory);
+        $logger->useJsonLines();
+        $logger->setContextProvider(null);
+        $logger->setWriteFailureHandler(null);
+        ini_set('error_log', $fallbackFile);
+        rmdir($logDirectory);
+
+        Log::channel('error-fallback')->error('预期进入备用通道');
+
+        $fallback = is_file($fallbackFile) ? file_get_contents($fallbackFile) : '';
+        assertTrueValue(
+            strpos($fallback, '[php-tools:log-write-failed]') !== false,
+            '默认 error_log fallback 未写入稳定标记'
+        );
+        assertTrueValue(
+            strpos($fallback, 'channel=error-fallback') !== false,
+            '默认 error_log fallback 缺少 Channel'
+        );
+    } finally {
+        ini_set('error_log', $previousErrorLog);
+        if (!is_dir($logDirectory)) {
+            mkdir($logDirectory, 0777, true);
+        }
+        $logger->setLogPath($logDirectory);
+        $logger->useJsonLines(false);
+        $logger->setContextProvider(null);
+        $logger->setWriteFailureHandler(null);
+        removeTestDirectory($directory);
+    }
+}
+
+function testLogWriterUsesExclusiveAppend()
+{
+    $source = file_get_contents(dirname(__DIR__) . '/src/Log/FileLogWriter.php');
+    assertTrueValue(
+        strpos($source, 'FILE_APPEND | LOCK_EX') !== false,
+        '日志 Writer 未启用互斥追加'
+    );
 }
 
 function testOpenSslCompatibility()
@@ -124,5 +249,9 @@ return [
     '已移除能力不可加载' => 'testRemovedCapabilities',
     'PHP 5.6 保留方法名扫描' => 'testPhp56ReservedMethodDeclarations',
     'PSR 日志兼容' => 'testLogPsrCompatibility',
+    'JSONL 与统一上下文' => 'testLogJsonLinesAndSharedContext',
+    '日志写入失败可观测' => 'testLogWriteFailureCanBeObserved',
+    '日志写入失败默认回退' => 'testLogWriteFailureFallsBackToErrorLog',
+    '日志文件互斥追加' => 'testLogWriterUsesExclusiveAppend',
     'OpenSSL 加解密兼容' => 'testOpenSslCompatibility',
 ];

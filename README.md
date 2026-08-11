@@ -26,6 +26,25 @@ composer require hongxunpan/php-tools
 - [GetDirFiles](readme/get-dir-files.md)：目录扫描；
 - [Progress](readme/cli-progress.md)：CLI 进度显示与下载进度。
 
+## 日志可靠性配置
+
+`Log` 默认继续使用原文本格式，现有 `Log::channel(...)` 与 PSR-3 调用无需迁移。项目如需单行 JSONL，可在启动 Provider 中显式配置：
+
+```php
+$logger = HongXunPan\Tools\Log\Log::getInstance();
+$logger->setLogPath('/path/to/logs');
+$logger->useJsonLines();
+$logger->setContextProvider(static function () {
+    return [
+        'request_id' => 'request-id',
+    ];
+});
+```
+
+JSONL 固定包含 `timestamp / level / channel / message / context`，Context Provider 返回的项目级追踪字段位于顶层，调用方原有 context 原样保留在 `context`。
+
+文件写入使用 `FILE_APPEND | LOCK_EX` 并检查实际写入字节数。写入失败默认以 `[php-tools:log-write-failed]` 标记回退到 `error_log()`；测试或项目监控也可以通过 `setWriteFailureHandler()` 接管失败通知。失败回退不包含原日志正文，避免在备用通道重复扩散业务数据。
+
 ## 3.0 变更边界
 
 3.0 是破坏性清理版本：

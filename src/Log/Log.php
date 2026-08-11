@@ -11,7 +11,10 @@ class Log extends SingletonAbstract implements LoggerInterface
     use LoggerTrait;
 
     protected $channel = '';
-    private $logPath = __DIR__ . '/../../../logs';
+    private static $logPath = '';
+    private static $jsonLinesEnabled = false;
+    private static $contextProvider;
+    private static $writeFailureHandler;
 
     public function setLogPath($logPath)
     {
@@ -23,12 +26,39 @@ class Log extends SingletonAbstract implements LoggerInterface
         }
         //自动添加/
         $logPath = rtrim($logPath, '/') . '/';
-        $this->logPath = $logPath;
+        self::$logPath = $logPath;
     }
 
     public function getLogPath()
     {
-        return $this->logPath;
+        if (self::$logPath === '') {
+            self::$logPath = rtrim(__DIR__ . '/../../../logs', '/') . '/';
+        }
+
+        return self::$logPath;
+    }
+
+    public function useJsonLines($enabled = true)
+    {
+        self::$jsonLinesEnabled = (bool)$enabled;
+    }
+
+    public function setContextProvider($provider = null)
+    {
+        if ($provider !== null && !is_callable($provider)) {
+            throw new \InvalidArgumentException('context provider must be callable or null');
+        }
+
+        self::$contextProvider = $provider;
+    }
+
+    public function setWriteFailureHandler($handler = null)
+    {
+        if ($handler !== null && !is_callable($handler)) {
+            throw new \InvalidArgumentException('write failure handler must be callable or null');
+        }
+
+        self::$writeFailureHandler = $handler;
     }
 
     public static function channel($channel = '')
@@ -41,25 +71,41 @@ class Log extends SingletonAbstract implements LoggerInterface
         }
         $log = new static();
         self::$instance[$channel] = $log;
-        $log->setLogPath(self::getInstance()->getLogPath());
         $log->channel = $channel;
         return $log;
     }
 
     protected function write($level, $msg, $data = [])
     {
-//        $log = [
-//            'level' => $level,
-//            'msg' => $msg,
-//            'data' => $data,
-//            'time' => date('Y-m-d H:i:s'),
-//        ];
-//        $log = json_encode($log, JSON_UNESCAPED_UNICODE);
-//        @file_put_contents($this->logPath . '/' . $level . date('Y-m-d') . '.log', $log . PHP_EOL, FILE_APPEND);
-
         $now = time();
-        $time = date('Y-m-d H:i:s', $now);
         $day = date('Y-m-d', $now);
+        $log = self::$jsonLinesEnabled
+            ? (new JsonLineFormatter())->format(
+                $level,
+                $this->channel,
+                $msg,
+                $data,
+                $this->resolveSharedContext()
+            )
+            : $this->formatLegacyLog($level, $msg, $data, $now);
+        $fileName = $this->channel
+            ? $this->channel . '-' . $day . '.log'
+            : $level . '-' . $day . '.log';
+
+        (new FileLogWriter())->write(
+            $this->getLogPath() . $fileName,
+            $log,
+            self::$writeFailureHandler,
+            [
+                'channel' => $this->channel,
+                'level' => (string)$level,
+            ]
+        );
+    }
+
+    private function formatLegacyLog($level, $msg, array $data, $now)
+    {
+        $time = date('Y-m-d H:i:s', $now);
         $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
         $log = "[" . strtoupper($level) . "] " . $time . ' - ' . getmypid() . ' - ' . $ip;
         if (php_sapi_name() != 'cli') {
@@ -77,8 +123,35 @@ class Log extends SingletonAbstract implements LoggerInterface
             $log .= PHP_EOL . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
         $log .= PHP_EOL . PHP_EOL;
-        $fileName = $this->channel ? $this->channel . '-' . $day . ".log" : $level . "-" . $day . ".log";
-        @file_put_contents($this->logPath . $fileName, $log, FILE_APPEND);
+
+        return $log;
+    }
+
+    private function resolveSharedContext()
+    {
+        if (!is_callable(self::$contextProvider)) {
+            return [];
+        }
+
+        try {
+            $context = call_user_func(self::$contextProvider);
+        } catch (\Exception $exception) {
+            error_log('[php-tools:log-context-failed] exception=' . get_class($exception));
+
+            return [];
+        } catch (\Throwable $throwable) {
+            error_log('[php-tools:log-context-failed] exception=' . get_class($throwable));
+
+            return [];
+        }
+
+        if (!is_array($context)) {
+            error_log('[php-tools:log-context-invalid] provider must return array');
+
+            return [];
+        }
+
+        return $context;
     }
 
     public function log($level, $message, array $context = [])
