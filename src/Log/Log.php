@@ -13,7 +13,7 @@ class Log extends SingletonAbstract implements LoggerInterface
     protected $channel = '';
     private static $logPath = '';
     private static $jsonLinesEnabled = false;
-    private static $contextProvider;
+    private static $contextProviders = [];
     private static $writeFailureHandler;
 
     public function setLogPath($logPath)
@@ -43,13 +43,23 @@ class Log extends SingletonAbstract implements LoggerInterface
         self::$jsonLinesEnabled = (bool)$enabled;
     }
 
-    public function setContextProvider($provider = null)
+    public function addContextProvider(LogContextProvider $provider)
     {
-        if ($provider !== null && !is_callable($provider)) {
-            throw new \InvalidArgumentException('context provider must be callable or null');
+        self::$contextProviders[get_class($provider)] = $provider;
+    }
+
+    public function removeContextProvider($providerClass)
+    {
+        if (!is_string($providerClass) || $providerClass === '') {
+            throw new \InvalidArgumentException('context provider class must be a non-empty string');
         }
 
-        self::$contextProvider = $provider;
+        unset(self::$contextProviders[ltrim($providerClass, '\\')]);
+    }
+
+    public function clearContextProviders()
+    {
+        self::$contextProviders = [];
     }
 
     public function setWriteFailureHandler($handler = null)
@@ -129,26 +139,34 @@ class Log extends SingletonAbstract implements LoggerInterface
 
     private function resolveSharedContext()
     {
-        if (!is_callable(self::$contextProvider)) {
-            return [];
-        }
+        $context = [];
+        foreach (self::$contextProviders as $provider) {
+            $providerClass = get_class($provider);
+            try {
+                $providedContext = $provider->context();
+            } catch (\Exception $exception) {
+                error_log(
+                    '[php-tools:log-context-failed] provider=' . $providerClass
+                    . ' exception=' . get_class($exception)
+                );
+                continue;
+            } catch (\Throwable $throwable) {
+                error_log(
+                    '[php-tools:log-context-failed] provider=' . $providerClass
+                    . ' exception=' . get_class($throwable)
+                );
+                continue;
+            }
 
-        try {
-            $context = call_user_func(self::$contextProvider);
-        } catch (\Exception $exception) {
-            error_log('[php-tools:log-context-failed] exception=' . get_class($exception));
+            if (!is_array($providedContext)) {
+                error_log(
+                    '[php-tools:log-context-invalid] provider=' . $providerClass
+                    . ' must return array'
+                );
+                continue;
+            }
 
-            return [];
-        } catch (\Throwable $throwable) {
-            error_log('[php-tools:log-context-failed] exception=' . get_class($throwable));
-
-            return [];
-        }
-
-        if (!is_array($context)) {
-            error_log('[php-tools:log-context-invalid] provider must return array');
-
-            return [];
+            $context = array_replace($context, $providedContext);
         }
 
         return $context;

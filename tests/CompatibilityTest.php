@@ -2,7 +2,50 @@
 
 use HongXunPan\Tools\Encrypt\OpensslEncrypt;
 use HongXunPan\Tools\Log\Log;
+use HongXunPan\Tools\Log\LogContextProvider;
 use Psr\Log\LoggerInterface;
+
+class FirstTestLogContextProvider implements LogContextProvider
+{
+    private $context;
+
+    public function __construct(array $context)
+    {
+        $this->context = $context;
+    }
+
+    public function context()
+    {
+        return $this->context;
+    }
+}
+
+class SecondTestLogContextProvider implements LogContextProvider
+{
+    public function context()
+    {
+        return [
+            'scope' => 'second',
+            'second_id' => 'second-id',
+        ];
+    }
+}
+
+class FailingTestLogContextProvider implements LogContextProvider
+{
+    public function context()
+    {
+        throw new RuntimeException('预期的 Context Provider 异常');
+    }
+}
+
+class InvalidTestLogContextProvider implements LogContextProvider
+{
+    public function context()
+    {
+        return 'invalid';
+    }
+}
 
 function testRemovedCapabilities()
 {
@@ -84,7 +127,7 @@ function testLogPsrCompatibility()
         assertTrueValue($logger instanceof LoggerInterface, 'Log 必须实现 PSR-3 LoggerInterface');
         $logger->setLogPath($directory);
         $logger->useJsonLines(false);
-        $logger->setContextProvider(null);
+        $logger->clearContextProviders();
         $logger->setWriteFailureHandler(null);
         $logger->info('基础日志', ['id' => 1]);
         Log::channel('test')->warning('频道日志');
@@ -97,39 +140,73 @@ function testLogPsrCompatibility()
     }
 }
 
-function testLogJsonLinesAndSharedContext()
+function testLogJsonLinesAndOrderedContextProviders()
 {
     $directory = makeTestDirectory('log-jsonl');
+    $providerErrorLog = $directory . DIRECTORY_SEPARATOR . 'provider-error.log';
+    $previousErrorLog = ini_get('error_log');
     try {
         $logger = Log::getInstance();
         $logger->setLogPath($directory);
         $logger->useJsonLines();
-        $logger->setContextProvider(function () {
-            return [
-                'request_id' => 'request-jsonl',
-                'trace_id' => 'trace-jsonl',
-            ];
-        });
+        $logger->clearContextProviders();
+        $logger->addContextProvider(new FirstTestLogContextProvider([
+            'scope' => 'first',
+            'request_id' => 'request-jsonl',
+        ]));
+        $logger->addContextProvider(new FailingTestLogContextProvider());
+        $logger->addContextProvider(new InvalidTestLogContextProvider());
+        $logger->addContextProvider(new SecondTestLogContextProvider());
+        $logger->addContextProvider(new FirstTestLogContextProvider([
+            'scope' => 'first-replaced',
+            'request_id' => 'request-replaced',
+        ]));
         $logger->setWriteFailureHandler(null);
+        ini_set('error_log', $providerErrorLog);
 
         Log::channel('jsonl')->info('结构化日志', ['id' => 7]);
+        $logger->removeContextProvider(SecondTestLogContextProvider::class);
+        Log::channel('jsonl')->info('移除 Provider 后的日志', ['id' => 8]);
 
         $file = $directory . DIRECTORY_SEPARATOR . 'jsonl-' . date('Y-m-d') . '.log';
         assertTrueValue(is_file($file), 'JSONL Channel 日志文件未生成');
         $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        assertSameValue(1, count($lines), '单条日志必须只占一行');
+        assertSameValue(2, count($lines), 'JSONL 日志条数或单行边界错误');
         $record = json_decode($lines[0], true);
+        $recordAfterRemove = json_decode($lines[1], true);
         assertTrueValue(is_array($record), 'JSONL 日志无法独立解析');
         assertSameValue('INFO', $record['level'], 'JSONL 日志级别错误');
         assertSameValue('jsonl', $record['channel'], 'JSONL Channel 错误');
         assertSameValue('结构化日志', $record['message'], 'JSONL message 错误');
-        assertSameValue('request-jsonl', $record['request_id'], 'JSONL 缺少请求上下文');
-        assertSameValue('trace-jsonl', $record['trace_id'], 'JSONL 缺少 trace 上下文');
+        assertSameValue('second', $record['scope'], 'Provider 未按首次注册顺序覆盖字段');
+        assertSameValue('request-replaced', $record['request_id'], '同类 Provider 未替换实例');
+        assertSameValue('second-id', $record['second_id'], '后续 Provider 上下文缺失');
         assertSameValue(['id' => 7], $record['context'], '调用 context 未原样保留');
+        assertSameValue(
+            'first-replaced',
+            $recordAfterRemove['scope'],
+            '按类名移除 Provider 后仍残留上下文'
+        );
+        assertTrueValue(!isset($recordAfterRemove['second_id']), '已移除 Provider 仍被执行');
+
+        $providerErrors = is_file($providerErrorLog) ? file_get_contents($providerErrorLog) : '';
+        assertTrueValue(
+            strpos($providerErrors, '[php-tools:log-context-failed]') !== false,
+            'Provider 异常未进入独立 error_log 通道'
+        );
+        assertTrueValue(
+            strpos($providerErrors, FailingTestLogContextProvider::class) !== false,
+            'Provider 异常缺少完整类名'
+        );
+        assertTrueValue(
+            strpos($providerErrors, '[php-tools:log-context-invalid]') !== false,
+            'Provider 非数组结果未被隔离'
+        );
     } finally {
         $logger = Log::getInstance();
+        ini_set('error_log', $previousErrorLog);
         $logger->useJsonLines(false);
-        $logger->setContextProvider(null);
+        $logger->clearContextProviders();
         $logger->setWriteFailureHandler(null);
         removeTestDirectory($directory);
     }
@@ -144,7 +221,7 @@ function testLogWriteFailureCanBeObserved()
     try {
         $logger->setLogPath($directory);
         $logger->useJsonLines();
-        $logger->setContextProvider(null);
+        $logger->clearContextProviders();
         $logger->setWriteFailureHandler(function (array $details) use (&$failures) {
             $failures[] = $details;
         });
@@ -163,7 +240,7 @@ function testLogWriteFailureCanBeObserved()
         }
         $logger->setLogPath($directory);
         $logger->useJsonLines(false);
-        $logger->setContextProvider(null);
+        $logger->clearContextProviders();
         $logger->setWriteFailureHandler(null);
         removeTestDirectory($directory);
     }
@@ -181,7 +258,7 @@ function testLogWriteFailureFallsBackToErrorLog()
         mkdir($logDirectory, 0777, true);
         $logger->setLogPath($logDirectory);
         $logger->useJsonLines();
-        $logger->setContextProvider(null);
+        $logger->clearContextProviders();
         $logger->setWriteFailureHandler(null);
         ini_set('error_log', $fallbackFile);
         rmdir($logDirectory);
@@ -204,7 +281,7 @@ function testLogWriteFailureFallsBackToErrorLog()
         }
         $logger->setLogPath($logDirectory);
         $logger->useJsonLines(false);
-        $logger->setContextProvider(null);
+        $logger->clearContextProviders();
         $logger->setWriteFailureHandler(null);
         removeTestDirectory($directory);
     }
@@ -249,7 +326,7 @@ return [
     '已移除能力不可加载' => 'testRemovedCapabilities',
     'PHP 5.6 保留方法名扫描' => 'testPhp56ReservedMethodDeclarations',
     'PSR 日志兼容' => 'testLogPsrCompatibility',
-    'JSONL 与统一上下文' => 'testLogJsonLinesAndSharedContext',
+    'JSONL 与有序上下文 Provider' => 'testLogJsonLinesAndOrderedContextProviders',
     '日志写入失败可观测' => 'testLogWriteFailureCanBeObserved',
     '日志写入失败默认回退' => 'testLogWriteFailureFallsBackToErrorLog',
     '日志文件互斥追加' => 'testLogWriterUsesExclusiveAppend',
