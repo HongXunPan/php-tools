@@ -1,74 +1,47 @@
+**简体中文** | [English](README.en.md)
+
 # PHP 工具包
 
-`hongxunpan/php-tools` 提供不依赖业务容器的通用 PHP 工具。3.0 线以 **PHP 5.6 可安装、PHP 8.x 可运行** 为兼容边界。
+[![PHP 兼容性](https://github.com/HongXunPan/php-tools/actions/workflows/php-compatibility.yml/badge.svg)](https://github.com/HongXunPan/php-tools/actions/workflows/php-compatibility.yml)
+[![Packagist 稳定版本](https://img.shields.io/packagist/v/hongxunpan/php-tools.svg)](https://packagist.org/packages/hongxunpan/php-tools)
+[![PHP 版本](https://img.shields.io/packagist/dependency-v/hongxunpan/php-tools/php.svg)](https://packagist.org/packages/hongxunpan/php-tools)
+[![许可证](https://img.shields.io/packagist/l/hongxunpan/php-tools.svg)](LICENSE)
 
-## 安装
+`hongxunpan/php-tools` 是面向 PHP `>=5.6` 的通用基础工具包，强调稳定兼容、职责清晰和跨项目复用，不依赖具体业务容器。
+
+## 安装与运行要求
 
 ```bash
 composer require hongxunpan/php-tools
 ```
 
-## 运行要求
-
 - PHP `>=5.6`；
-- 使用日志能力时遵循 PSR-3 1.x 契约；
-- Redis 工具默认可使用 `hongxunpan/db` 的 Redis 连接，也允许注入兼容的 Redis 客户端；
-- GitHub Actions 持续验证 PHP `5.6`、`7.4`、`8.0`、`8.5`。
+- PHP 5.6 环境应使用 Composer 2.2 LTS 安装依赖；
+- GitHub Actions 持续验证 PHP `5.6`、`7.4`、`8.0` 和 `8.5`。
 
-## 能力索引
+## 版本支持
 
-- `Log`：轻量文件日志与 PSR-3 Logger；
-- `Cache`：Redis 缓存辅助；
-- [RedisLock](readme/redis-lock.md)：Redis 分布式独占锁；
-- [RedisDraw](readme/redis-draw.md)：Redis 抽奖；
-- [RedisTimeLimitOffers](readme/redis-time-limit-offers.md)：Redis 限量名额；
-- [OpensslEncrypt](readme/openssl-encrypt.md)：兼容历史密文的 OpenSSL 加解密；
-- [GetDirFiles](readme/get-dir-files.md)：目录扫描；
-- [Progress](readme/cli-progress.md)：CLI 进度显示与下载进度。
+| 包版本 | 维护状态 | PHP 要求 |
+| --- | --- | --- |
+| `3.x` | 当前维护版本 | PHP `>=5.6` |
+| `2.x` | 历史兼容版本，按问题影响评估 | 以对应版本约束为准 |
+| `<2.0` | 不再维护 | 不适用 |
 
-## 日志可靠性配置
+PHP `>=5.6` 是当前项目的正式支持范围，不会通过拆分现代版与兼容版来缩减这一边界。生产环境仍应在业务兼容范围内选用受上游安全维护的 PHP 运行时。
 
-`Log` 默认继续使用原文本格式，现有 `Log::channel(...)` 与 PSR-3 调用无需迁移。项目如需单行 JSONL，可在启动 Provider 中显式配置：
+## 能力导航
 
-```php
-use HongXunPan\Tools\Log\LogContextProvider;
+| 分类 | 文档入口 |
+| --- | --- |
+| 日志 | [Log](readme/log.md) |
+| Redis 协作 | [RedisLock](readme/redis-lock.md) · [RedisDraw](readme/redis-draw.md) · [RedisTimeLimitOffers](readme/redis-time-limit-offers.md) |
+| 加解密 | [OpensslEncrypt](readme/openssl-encrypt.md) |
+| 文件与命令行 | [GetDirFiles](readme/get-dir-files.md) · [Progress](readme/cli-progress.md) |
+| 其他公共类 | `Cache` · `List2Tree` · `Tree2List` · `Performance` |
 
-final class RequestLogContextProvider implements LogContextProvider
-{
-    public function context()
-    {
-        return [
-            'request_id' => 'request-id',
-        ];
-    }
-}
+## 升级到 3.x
 
-$logger = HongXunPan\Tools\Log\Log::getInstance();
-$logger->setLogPath('/path/to/logs');
-$logger->useJsonLines();
-$logger->addContextProvider(new RequestLogContextProvider());
-```
-
-JSONL 固定包含 `timestamp / level / channel / message / context`，Context Provider 返回的项目级追踪字段位于顶层，调用方原有 context 原样保留在 `context`。
-
-可以注册多个 `LogContextProvider`。Log 使用 Provider 完整类名去重，并按首次注册顺序执行；同类重复注册只替换实例、不改变顺序，后执行 Provider 覆盖同名字段。单个 Provider 抛异常或返回非数组时会写入 `error_log()` 并继续执行其余 Provider。Provider 只应读取当前上下文，不应在 `context()` 内再次写日志。
-
-文件写入使用 `FILE_APPEND | LOCK_EX` 并检查实际写入字节数。写入失败默认以 `[php-tools:log-write-failed]` 标记回退到 `error_log()`；测试或项目监控也可以通过 `setWriteFailureHandler()` 接管失败通知。失败回退不包含原日志正文，避免在备用通道重复扩散业务数据。
-
-## 3.0 变更边界
-
-3.0 是破坏性清理版本：
-
-- 移除 ElasticSearch、DingTalk，避免通用工具包携带重型或业务渠道依赖；
-- 移除无完整实现或无稳定契约的 `QueryBuilder`、`ModelUtils`、`EnumException`、`SSETrait`；
-- 移除未形成可用能力的 ServerMonitor、ServerProbe、RateLimit、ValueShare 等空壳；
-- 移除已归 simple-framework core 的 Config / Env，以及已由 simple-event 承接的历史 Event 草稿；
-- 移除已由独立包 `hongxunpan/validator` 承接的旧 Validator；
-- 保留 `OpensslEncrypt` 的历史默认行为和密文格式，但新项目必须显式配置密钥与 IV；
-- 修复 Redis 缓存返回值、目录扫描、树转换等实际逻辑错误；
-- 限量名额改为 Lua 原子领取，避免并发超发。
-
-升级前应先搜索项目对已移除类的直接引用；旧项目可继续锁定 2.x，新项目与完成迁移的项目再接入 3.x。
+3.0 是破坏性清理版本。升级前应先阅读[更新日志](CHANGELOG.md)，核对已移除能力并完成调用方回归。
 
 ## 本地验证
 
@@ -78,15 +51,16 @@ composer lint
 composer test
 ```
 
-PHP 5.6 语法与运行兼容性由 GitHub Actions 承担，本地开发环境无需额外拉取旧版 PHP 镜像。
+PHP 5.6 语法与运行兼容性由 GitHub Actions 承担。单一高版本环境通过不能替代完整兼容矩阵。
 
-## 更新记录
+## 社区与支持
 
-- `3.0.0` 2026-07-25：PHP 5.6 兼容回退、废弃能力清理、核心逻辑修复与兼容矩阵；
-- `2.8.0` 2024-05-24：Performance；
-- `2.7.0` 2024-05-24：SSE supporter；
-- `2.6.0` 2024-03-06：OpensslEncrypt；
-- `2.5.0` 2024-02-18：Cache remember；
-- `2.4.0` 2023-06-30：Config 与 Env；
-- `2.3.0` 2023-05-19：GetDirFiles；
-- `2.0.0` 2022-10-13：拆分数据库连接。
+- 提交缺陷或建议前请阅读[支持说明](SUPPORT.md)；
+- 贡献代码请遵循[参与贡献](CONTRIBUTING.md)；
+- 安全漏洞请按[安全策略](SECURITY.md)私下报告；
+- 参与仓库互动即表示同意[社区行为准则](CODE_OF_CONDUCT.md)；
+- 所有用户可感知变化统一记录在[更新日志](CHANGELOG.md)。
+
+## 许可证
+
+本项目按 [MIT License](LICENSE) 开源。
