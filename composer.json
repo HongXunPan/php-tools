@@ -1,8 +1,22 @@
 {
     "name": "hongxunpan/php-tools",
-    "description": "common php tools and functions",
+    "description": "Reusable PHP 5.6+ tools for logging, Redis coordination, encryption, files, and CLI workflows",
     "type": "library",
     "license": "MIT",
+    "keywords": [
+        "php",
+        "tools",
+        "logging",
+        "redis",
+        "encryption",
+        "cli"
+    ],
+    "homepage": "https://github.com/HongXunPan/php-tools",
+    "support": {
+        "docs": "https://github.com/HongXunPan/php-tools#readme",
+        "issues": "https://github.com/HongXunPan/php-tools/issues",
+        "source": "https://github.com/HongXunPan/php-tools"
+    },
     "autoload": {
         "psr-4": {
             "HongXunPan\\Tools\\": "src/"
